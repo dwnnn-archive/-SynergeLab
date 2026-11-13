@@ -37,6 +37,8 @@ import {
   validBoard,
   filterTasks,
   nextId,
+  orderedTasks,
+  placeTask,
 } from "./model";
 import "./styles.css";
 import { useSharedBoard } from "./useSharedBoard";
@@ -73,7 +75,7 @@ function App() {
     [toast, setToast] = useState(""),
     [deleted, setDeleted] = useState(null),
     [drag, setDrag] = useState(""),
-    [over, setOver] = useState(""),
+    [over, setOver] = useState(null),
     [deleteConfirm, setDeleteConfirm] = useState(false),
     [closeConfirm, setCloseConfirm] = useState(false);
   const dialog = useRef(null),
@@ -217,9 +219,28 @@ function App() {
       id: draft.id || draft.newId,
     };
     const base = editBase.current || board;
-    const tasks = draft.id
+    let tasks = draft.id
       ? base.tasks.map((t) => (t.id === draft.id ? task : t))
       : [...base.tasks, task];
+    const changedStatus =
+      draft.id &&
+      base.tasks.find((t) => t.id === draft.id)?.status !== task.status;
+    if (
+      !draft.id ||
+      changedStatus ||
+      (draft.beforeId !== undefined && draft.beforeId !== "keep")
+    ) {
+      const beforeId =
+        draft.beforeId && draft.beforeId !== "keep" ? draft.beforeId : null;
+      if (
+        beforeId &&
+        !tasks.some((t) => t.id === beforeId && t.status === task.status)
+      ) {
+        setError("선택한 카드 위치가 바뀌었습니다. 위치를 다시 선택해 주세요.");
+        return;
+      }
+      tasks = placeTask(tasks, task.id, task.status, beforeId);
+    }
     if (
       await commit(
         { ...base, tasks },
@@ -229,18 +250,22 @@ function App() {
     )
       close(true);
   }
-  async function move(id, status) {
-    const task = board.tasks.find((t) => t.id === id);
-    if (task && task.status !== status)
-      await commit(
-        {
-          ...board,
-          tasks: board.tasks.map((t) => (t.id === id ? { ...t, status } : t)),
-        },
-        `${STATUSES.find((s) => s.id === status).name} 열로 옮겼어요.`,
-      );
+  async function move(id, status, beforeId = null) {
     setDrag("");
-    setOver("");
+    setOver(null);
+    const tasks = placeTask(board.tasks, id, status, beforeId);
+    if (tasks !== board.tasks)
+      await commit({ ...board, tasks }, "카드 위치를 저장했어요.");
+  }
+  function dropPosition(event, status) {
+    const cards = [
+      ...event.currentTarget.querySelectorAll(".card:not(.dragging)"),
+    ];
+    const following = cards.find((card) => {
+      const bounds = card.getBoundingClientRect();
+      return event.clientY < bounds.top + bounds.height / 2;
+    });
+    return { status, beforeId: following?.dataset.taskId ?? null };
   }
   async function remove() {
     const base = editBase.current || board;
@@ -699,19 +724,29 @@ function App() {
                 return (
                   <section
                     key={status.id}
-                    className={`column ${status.id} ${over === status.id ? "drag-over" : ""}`}
+                    className={`column ${status.id}`}
                     aria-label={status.name}
                     onDragOver={(e) => {
+                      if (!drag || busyRef.current) return;
                       e.preventDefault();
-                      setOver(status.id);
+                      e.dataTransfer.dropEffect = "move";
+                      const target = dropPosition(e, status.id);
+                      setOver((previous) =>
+                        previous?.status === target.status &&
+                        previous?.beforeId === target.beforeId
+                          ? previous
+                          : target,
+                      );
                     }}
                     onDragLeave={(e) => {
                       if (!e.currentTarget.contains(e.relatedTarget))
-                        setOver("");
+                        setOver(null);
                     }}
                     onDrop={(e) => {
                       e.preventDefault();
-                      move(e.dataTransfer.getData("text/plain"), status.id);
+                      if (!drag || busyRef.current) return;
+                      const target = dropPosition(e, status.id);
+                      move(drag, status.id, target.beforeId);
                     }}
                   >
                     <header className="column-heading">
@@ -731,59 +766,74 @@ function App() {
                     </header>
                     <div className="cards">
                       {tasks.map((task) => (
-                        <article
-                          key={task.id}
-                          className={`card ${drag === task.id ? "dragging" : ""}`}
-                          draggable
-                          onDragStart={(e) => {
-                            setDrag(task.id);
-                            e.dataTransfer.setData("text/plain", task.id);
-                            e.dataTransfer.effectAllowed = "move";
-                          }}
-                          onDragEnd={() => {
-                            setDrag("");
-                            setOver("");
-                          }}
-                        >
-                          <button
-                            className="card-open"
-                            onClick={() => openTask(task)}
-                            aria-label={`${task.title} 편집`}
-                          >
-                            <div className="card-label-row">
+                        <div className="card-slot" key={task.id}>
+                          {over?.status === status.id &&
+                            over.beforeId === task.id && (
                               <span
-                                className={`tag tag-${TAGS.indexOf(task.tag)}`}
-                              >
-                                {task.tag}
-                              </span>
-                              {task.priority && (
+                                className="drop-indicator"
+                                aria-hidden="true"
+                              />
+                            )}
+                          <article
+                            data-task-id={task.id}
+                            className={`card ${drag === task.id ? "dragging" : ""}`}
+                            draggable={!busy}
+                            onDragStart={(e) => {
+                              setDrag(task.id);
+                              e.dataTransfer.setData("text/plain", task.id);
+                              e.dataTransfer.effectAllowed = "move";
+                            }}
+                            onDragEnd={() => {
+                              setDrag("");
+                              setOver(null);
+                            }}
+                          >
+                            <button
+                              className="card-open"
+                              onClick={() => openTask(task)}
+                              aria-label={`${task.title} 편집`}
+                            >
+                              <div className="card-label-row">
                                 <span
-                                  className="priority"
-                                  title="우선순위 높음"
+                                  className={`tag tag-${TAGS.indexOf(task.tag)}`}
                                 >
-                                  <Flag size={13} weight="fill" />
-                                  우선
+                                  {task.tag}
                                 </span>
-                              )}
-                              {status.id === "done" && (
-                                <CheckCircle
-                                  className="card-check"
-                                  size={17}
-                                  weight="fill"
-                                />
-                              )}
-                            </div>
-                            <h3>{task.title}</h3>
-                            <p title={task.description}>{task.description}</p>
-                            <div className="card-bottom">
-                              <span className="task-id" title={task.id}>
-                                {task.id.slice(0, 11)}
-                              </span>
-                              <Avatar id={task.member} size="small" />
-                            </div>
-                          </button>
-                        </article>
+                                {task.priority && (
+                                  <span
+                                    className="priority"
+                                    title="우선순위 높음"
+                                  >
+                                    <Flag size={13} weight="fill" />
+                                    우선
+                                  </span>
+                                )}
+                                {status.id === "done" && (
+                                  <CheckCircle
+                                    className="card-check"
+                                    size={17}
+                                    weight="fill"
+                                  />
+                                )}
+                              </div>
+                              <h3>{task.title}</h3>
+                              <p title={task.description}>{task.description}</p>
+                              <div className="card-bottom">
+                                <span className="task-id" title={task.id}>
+                                  {task.id.slice(0, 11)}
+                                </span>
+                                <Avatar id={task.member} size="small" />
+                              </div>
+                            </button>
+                          </article>
+                        </div>
                       ))}
+                      {over?.status === status.id && over.beforeId === null && (
+                        <span
+                          className={`drop-indicator drop-end ${tasks.length === 0 ? "empty" : ""}`}
+                          aria-hidden="true"
+                        />
+                      )}
                       {tasks.length === 0 && (
                         <div className="empty-column">
                           {hasFilter
@@ -1002,7 +1052,11 @@ function App() {
                           aria-label="상태"
                           value={draft.status}
                           onChange={(e) =>
-                            setDraft({ ...draft, status: e.target.value })
+                            setDraft({
+                              ...draft,
+                              status: e.target.value,
+                              beforeId: "",
+                            })
                           }
                         >
                           {STATUSES.map((s) => (
@@ -1044,6 +1098,31 @@ function App() {
                         </select>
                       </label>
                     </div>
+                    <label className="field">
+                      카드 위치
+                      <select
+                        aria-label="카드 위치"
+                        value={draft.beforeId ?? (draft.id ? "keep" : "")}
+                        onChange={(e) =>
+                          setDraft({ ...draft, beforeId: e.target.value })
+                        }
+                      >
+                        {draft.id && (
+                          <option value="keep">현재 위치 유지</option>
+                        )}
+                        {orderedTasks(board.tasks)
+                          .filter(
+                            (t) =>
+                              t.status === draft.status && t.id !== draft.id,
+                          )
+                          .map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.title} 앞
+                            </option>
+                          ))}
+                        <option value="">맨 아래</option>
+                      </select>
+                    </label>
                     <label className="check-field">
                       <input
                         type="checkbox"

@@ -52,7 +52,7 @@ export class BoardRoom extends DurableObject {
     const row = this.ctx.storage.sql
       .exec("SELECT payload FROM board WHERE id=1")
       .toArray()[0];
-    return row ? JSON.parse(row.payload) : null;
+    return row ? checkedBoard(JSON.parse(row.payload)) : null;
   }
   async write(board) {
     this.ctx.storage.sql.exec(

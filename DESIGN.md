@@ -19,3 +19,9 @@ See UX-CONTRACT.md. All icons use Phosphor. No remote images/fonts needed. Focus
 ## Compact cards
 
 Cards use a three-row grid: label/priority alongside ID/assignee, title, then a one-line description preview. Vertical padding is 8px at all viewport sizes. Full description remains in the editor and the preview tooltip. Long titles wrap naturally; there is no fixed height or text clipping on titles. Standard cards target roughly half the former height.
+
+## Compact heading and drop position
+
+The breadcrumb bar is 36px high. Main top padding is 10–14px, heading bottom spacing is 8–10px, and board/list tabs are 30px high. These reduce the tall introductory region while preserving text sizes and the sidebar layout. Card density stays unchanged.
+
+During a card drag, a 3px green line (`--drop-marker: #279566`) with small round ends marks the insertion boundary. It is an absolute overlay in the existing card gap, so showing it never pushes cards around. It follows the pointer above/below each card midpoint and supports the beginning, middle, end and empty columns. The editor's native “카드 위치” select provides the same ordering without dragging.

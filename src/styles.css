@@ -17,6 +17,7 @@
   --sidebar: #f5f6f8;
   --column: #f2f4f6;
   --yellow: #fff1ae;
+  --drop-marker: #279566;
   --border: #e7eaf0;
   --scroll-thumb: #c5cbd4;
   --scroll-track: transparent;
@@ -333,7 +334,7 @@ main {
   width: calc(100% - 278px);
 }
 .topbar {
-  height: 66px;
+  height: 36px;
   border-bottom: 1px solid #eef0f3;
   display: flex;
   align-items: center;
@@ -364,7 +365,7 @@ main {
   color: #8f5a1a;
 }
 .content {
-  padding: 33px 36px 24px;
+  padding: 10px 36px 24px;
   max-width: 1600px;
   margin: auto;
 }
@@ -373,13 +374,13 @@ main {
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  margin-bottom: 28px;
+  margin-bottom: 8px;
 }
 .eyebrow {
   font-size: 10px;
   letter-spacing: 0.5px;
   color: #626973;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 h1 {
   font-size: 26px;
@@ -406,7 +407,7 @@ h1 {
 .heading p {
   font-size: 12px;
   color: #606770;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 .heading-actions {
   display: flex;
@@ -443,7 +444,7 @@ h1 {
   color: #616873;
 }
 .view-tabs {
-  height: 43px;
+  height: 30px;
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
@@ -456,7 +457,7 @@ h1 {
 .view-tabs [role="tab"] {
   border-bottom: 2px solid transparent;
   border-radius: 0;
-  padding: 0 3px 12px;
+  padding: 0 3px 6px;
   color: #606772;
   font-size: 12px;
   gap: 7px;
@@ -476,7 +477,7 @@ h1 {
   gap: 9px;
   font-size: 10px;
   color: #5e6670;
-  padding-bottom: 12px;
+  padding-bottom: 6px;
 }
 .progress-track {
   width: 65px;
@@ -609,9 +610,6 @@ h1 {
 .column.doing {
   background: var(--yellow);
 }
-.column.drag-over {
-  box-shadow: inset 0 0 0 2px var(--brand);
-}
 .column-heading {
   display: flex;
   align-items: center;
@@ -681,9 +679,49 @@ h1 {
   background: #0000000b;
 }
 .cards {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 9px;
+}
+.card-slot {
+  position: relative;
+  min-width: 0;
+}
+.drop-indicator {
+  position: absolute;
+  top: -6px;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--drop-marker);
+  z-index: 2;
+  pointer-events: none;
+}
+.drop-indicator::before,
+.drop-indicator::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--drop-marker);
+}
+.drop-indicator::before {
+  left: -2px;
+}
+.drop-indicator::after {
+  right: -2px;
+}
+.drop-end {
+  top: auto;
+  bottom: -6px;
+}
+.drop-end.empty {
+  top: 0;
+  bottom: auto;
 }
 .card {
   background: white;
@@ -1193,7 +1231,7 @@ h1 {
 }
 @media (min-width: 1500px) {
   .content {
-    padding-top: 42px;
+    padding-top: 14px;
   }
   .column {
     min-height: 610px;
@@ -1219,7 +1257,7 @@ h1 {
     width: calc(100% - 248px);
   }
   .content {
-    padding: 28px 24px;
+    padding: 10px 24px 24px;
   }
   .topbar {
     padding: 0 24px;
@@ -1303,14 +1341,14 @@ h1 {
     width: 100%;
   }
   .topbar {
-    height: 47px;
+    height: 36px;
     padding: 0 20px;
   }
   .content {
-    padding: 25px 20px;
+    padding: 12px 20px 25px;
   }
   .heading {
-    margin-bottom: 23px;
+    margin-bottom: 10px;
     gap: 10px;
   }
   .heading h1 {

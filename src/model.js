@@ -117,7 +117,9 @@ export function validBoard(value) {
         STATUSES.some((s) => s.id === t.status) &&
         TAGS.includes(t.tag) &&
         (t.member === "" || MEMBERS.some((m) => m.id === t.member)) &&
-        typeof t.priority === "boolean",
+        typeof t.priority === "boolean" &&
+        (t.position === undefined ||
+          (Number.isFinite(t.position) && Math.abs(t.position) <= 1e12)),
     ) &&
     new Set(value.tasks.map((t) => t.id)).size === value.tasks.length
   );
@@ -127,7 +129,7 @@ export function filterTasks(
   { query = "", member = "", tag = "", mine = false },
 ) {
   const q = query.trim().toLocaleLowerCase("ko");
-  return tasks.filter(
+  return orderedTasks(tasks).filter(
     (t) =>
       (!q ||
         `${t.title} ${t.description} ${t.id}`
@@ -137,6 +139,65 @@ export function filterTasks(
       (!tag || t.tag === tag) &&
       (!mine || t.member === "ji"),
   );
+}
+// Legacy cards receive their existing array order; persisted positions are stable
+// across deletions and independent edits by other teammates.
+export function orderedTasks(tasks) {
+  return tasks
+    .map((task, index) => ({
+      ...task,
+      position: task.position ?? index * 1024,
+    }))
+    .sort(
+      (a, b) =>
+        a.position - b.position || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
+}
+
+export function placeTask(tasks, id, status, beforeId = null) {
+  if (!STATUSES.some((s) => s.id === status) || beforeId === id) return tasks;
+  const ordered = orderedTasks(tasks);
+  const task = ordered.find((t) => t.id === id);
+  if (!task) return tasks;
+  const column = ordered.filter((t) => t.status === status && t.id !== id);
+  const index = beforeId
+    ? column.findIndex((t) => t.id === beforeId)
+    : column.length;
+  if (index < 0) return tasks;
+  const previous = column[index - 1]?.position;
+  const following = column[index]?.position;
+  if (
+    task.status === status &&
+    tasks.find((t) => t.id === id).position !== undefined
+  ) {
+    const existing = ordered.filter((t) => t.status === status);
+    const currentIndex = existing.findIndex((t) => t.id === id);
+    if ((existing[currentIndex + 1]?.id ?? null) === beforeId) return tasks;
+  }
+  const position =
+    previous === undefined
+      ? following === undefined
+        ? 0
+        : following - 1024
+      : following === undefined
+        ? previous + 1024
+        : previous + (following - previous) / 2;
+  const positions = new Map(ordered.map((t) => [t.id, t.position]));
+  if (
+    !Number.isFinite(position) ||
+    Math.abs(position) > 1e12 ||
+    (previous !== undefined && position <= previous) ||
+    (following !== undefined && position >= following)
+  ) {
+    // Extremely tight or tied positions are re-spaced within this column only.
+    column.splice(index, 0, task);
+    column.forEach((t, i) => positions.set(t.id, i * 1024));
+  } else positions.set(id, position);
+  return tasks.map((t) => ({
+    ...t,
+    status: t.id === id ? status : t.status,
+    position: positions.get(t.id),
+  }));
 }
 export function nextId(tasks) {
   return `SL-${String(Math.max(0, ...tasks.map((t) => Number(t.id.split("-")[1]) || 0)) + 1).padStart(3, "0")}`;

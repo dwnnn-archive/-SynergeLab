@@ -23,7 +23,10 @@ export function checkedBoard(value) {
     name: value.name,
     memo: value.memo,
     tasks: value.tasks.map(
-      ({ id, title, description, status, tag, member, priority }) => ({
+      (
+        { id, title, description, status, tag, member, priority, position },
+        index,
+      ) => ({
         id,
         title,
         description,
@@ -31,6 +34,7 @@ export function checkedBoard(value) {
         tag,
         member,
         priority,
+        position: position ?? index * 1024,
       }),
     ),
   };
@@ -38,6 +42,8 @@ export function checkedBoard(value) {
 const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 // Merge independent edits; never replace a collaborator's changed card or memo.
 export function mergeBoards(current, base, next) {
+  const original = current;
+  current = checkedBoard(current);
   base = checkedBoard(base);
   next = checkedBoard(next);
   const merged = structuredClone(current);
@@ -68,7 +74,7 @@ export function mergeBoards(current, base, next) {
   }
   checkedBoard(merged);
   if (equal({ ...merged, revision: 0 }, { ...current, revision: 0 }))
-    return current;
+    return original;
   merged.revision = current.revision + 1;
   return merged;
 }
