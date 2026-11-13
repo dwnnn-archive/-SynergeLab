@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.playwright/
+test-results/
+.wrangler/
+.dev.vars
+.env*
+artifacts/
+premium-audit.json

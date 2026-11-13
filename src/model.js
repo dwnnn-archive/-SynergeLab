@@ -1,0 +1,143 @@
+export const KEY = "synergelab-board-v1";
+export const STATUSES = [
+  { id: "todo", name: "할 일", english: "TO DO" },
+  { id: "doing", name: "진행 중", english: "IN PROGRESS" },
+  { id: "done", name: "완료", english: "DONE" },
+];
+export const MEMBERS = [
+  { id: "ji", name: "지민", color: "rose" },
+  { id: "su", name: "수현", color: "blue" },
+  { id: "ha", name: "하린", color: "purple" },
+  { id: "do", name: "도윤", color: "green" },
+];
+export const TAGS = ["기획", "디자인", "개발", "운영"];
+export const SEED = {
+  version: 1,
+  revision: 0,
+  name: "우리 팀 보드",
+  memo: "이번 주에 함께 기억할 것\n\n• 작은 일도 카드로 남겨요.\n• 막힌 일이 있다면 다음 회의에서 함께 이야기해요.\n• 완료한 일은 완료 열로 옮겨주세요.",
+  tasks: [
+    {
+      id: "SL-001",
+      title: "팀원들의 아이디어 모아보기",
+      description: "다음 프로젝트에서 해보고 싶은 것들을 편하게 남겨주세요.",
+      status: "todo",
+      tag: "기획",
+      member: "ji",
+      priority: false,
+    },
+    {
+      id: "SL-002",
+      title: "첫 화면 레퍼런스 찾아보기",
+      description: "좋은 경험을 주는 서비스 3개씩 공유해요.",
+      status: "todo",
+      tag: "디자인",
+      member: "ha",
+      priority: false,
+    },
+    {
+      id: "SL-003",
+      title: "사용자 피드백 정리하기",
+      description: "지난주에 받은 의견을 한곳에 모아볼까요?",
+      status: "todo",
+      tag: "기획",
+      member: "su",
+      priority: true,
+    },
+    {
+      id: "SL-004",
+      title: "다음 주 팀 미팅 준비",
+      description: "이야기할 주제와 결정할 내용을 정리해요.",
+      status: "todo",
+      tag: "운영",
+      member: "do",
+      priority: false,
+    },
+    {
+      id: "SL-005",
+      title: "우리 팀 칸반 보드 만들기",
+      description: "할 일부터 완료까지, 한눈에 볼 수 있는 작은 작업 공간.",
+      status: "doing",
+      tag: "개발",
+      member: "su",
+      priority: true,
+    },
+    {
+      id: "SL-006",
+      title: "브랜드 컬러와 폰트 정하기",
+      description: "우리다운 느낌을 찾아가고 있어요.",
+      status: "doing",
+      tag: "디자인",
+      member: "ha",
+      priority: false,
+    },
+    {
+      id: "SL-007",
+      title: "프로젝트 소개 글 작성",
+      description: "누구를 위해, 무엇을 만드는지 짧고 명확하게.",
+      status: "doing",
+      tag: "기획",
+      member: "ji",
+      priority: false,
+    },
+    {
+      id: "SL-008",
+      title: "팀 작업 공간 세팅",
+      description: "함께 일할 준비를 마쳤어요.",
+      status: "done",
+      tag: "운영",
+      member: "do",
+      priority: false,
+    },
+    {
+      id: "SL-009",
+      title: "첫 번째 아이디어 미팅",
+      description: "작게 시작하고, 함께 키워가기로 했어요.",
+      status: "done",
+      tag: "기획",
+      member: "ji",
+      priority: false,
+    },
+  ],
+};
+export function validBoard(value) {
+  return (
+    !!value &&
+    value.version === 1 &&
+    Number.isFinite(value.revision) &&
+    typeof value.name === "string" &&
+    typeof value.memo === "string" &&
+    Array.isArray(value.tasks) &&
+    value.tasks.every(
+      (t) =>
+        t &&
+        typeof t.id === "string" &&
+        typeof t.title === "string" &&
+        typeof t.description === "string" &&
+        STATUSES.some((s) => s.id === t.status) &&
+        TAGS.includes(t.tag) &&
+        (t.member === "" || MEMBERS.some((m) => m.id === t.member)) &&
+        typeof t.priority === "boolean",
+    ) &&
+    new Set(value.tasks.map((t) => t.id)).size === value.tasks.length
+  );
+}
+export function filterTasks(
+  tasks,
+  { query = "", member = "", tag = "", mine = false },
+) {
+  const q = query.trim().toLocaleLowerCase("ko");
+  return tasks.filter(
+    (t) =>
+      (!q ||
+        `${t.title} ${t.description} ${t.id}`
+          .toLocaleLowerCase("ko")
+          .includes(q)) &&
+      (!member || t.member === member) &&
+      (!tag || t.tag === tag) &&
+      (!mine || t.member === "ji"),
+  );
+}
+export function nextId(tasks) {
+  return `SL-${String(Math.max(0, ...tasks.map((t) => Number(t.id.split("-")[1]) || 0)) + 1).padStart(3, "0")}`;
+}

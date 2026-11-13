@@ -1,0 +1,24 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["src"],
+  "locale": "ko-KR",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": [
+    "Select/Listbox",
+    "Form",
+    "Scrollbar",
+    "Toast",
+    "CRUD"
+  ],
+  "ownership": { "Select/Listbox": "native" },
+  "commands": {
+    "test": "npm test",
+    "build": "npm run build",
+    "browser": "npx playwright test"
+  },
+  "requiredCommands": ["test", "build", "browser"],
+  "evidence": {
+    "crudFullFlow": "tests/board.spec.js",
+    "failurePaths": "tests/board.spec.js"
+  }
+}
