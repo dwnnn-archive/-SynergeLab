@@ -137,3 +137,34 @@ test("desktop accessibility and mobile memo navigation", async ({ page }) => {
   await page.getByRole("button", { name: "메모 저장" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
 });
+
+test("헤더에서 팀 보드·내 할 일·메모를 전환하고 모바일에서도 메뉴를 유지한다", async ({
+  page,
+}) => {
+  const navigation = page.getByRole("navigation", {
+    name: "워크스페이스 탐색",
+  });
+  await navigation
+    .getByRole("button", { name: "내 할 일", exact: true })
+    .click();
+  await expect(page.locator(".card")).toHaveCount(3);
+  await expect(
+    navigation.getByRole("button", { name: "내 할 일", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await navigation.getByRole("button", { name: /팀 보드/ }).click();
+  await expect(page.locator(".card")).toHaveCount(9);
+  for (const width of [768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBe(width);
+    await navigation
+      .getByRole("button", { name: "팀 메모", exact: true })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.getByRole("button", { name: "닫기", exact: true }).click();
+    await page.getByRole("button", { name: "보드 설정", exact: true }).click();
+    await expect(page.getByLabel("보드 이름")).toBeVisible();
+    await page.getByRole("button", { name: "닫기", exact: true }).click();
+  }
+});
