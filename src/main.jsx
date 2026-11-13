@@ -6,6 +6,7 @@ import {
   Plus,
   Kanban,
   List,
+  CaretDown,
   CaretRight,
   Check,
   CheckCircle,
@@ -14,11 +15,14 @@ import {
   Users,
   GearSix,
   Question,
+  ArrowSquareOut,
   DownloadSimple,
   Flag,
   DotsThree,
   ArrowRight,
+  CloudCheck,
   LockSimple,
+  SidebarSimple,
   Trash,
   ArrowCounterClockwise,
   SlidersHorizontal,
@@ -319,93 +323,145 @@ function App() {
   const complete = board.tasks.filter((t) => t.status === "done").length;
   return (
     <div className="app">
-      <header className="site-header">
-        <div className="header-inner">
+      <nav className="rail" aria-label="빠른 탐색">
+        <button
+          className="brand-symbol"
+          aria-label="팀 보드 홈"
+          onClick={() => {
+            reset();
+            setView("board");
+          }}
+        >
+          <SquaresFour size={26} weight="fill" />
+        </button>
+        <div className="rail-main">
           <button
-            className="site-brand"
-            aria-label="팀 보드 홈"
+            className="rail-button selected"
+            aria-label="보드"
             onClick={() => {
               reset();
               setView("board");
             }}
           >
-            <span className="site-logo">
-              <SquaresFour size={23} weight="fill" />
-            </span>
-            <span className="brand-copy">
-              <strong>SynergeLab</strong>
-              <span>작은 팀, 함께 만드는 일</span>
-            </span>
+            <Kanban size={22} />
           </button>
-          <nav className="site-nav" aria-label="워크스페이스 탐색">
-            <button
-              className={!mine ? "active" : ""}
-              aria-current={!mine ? "page" : undefined}
-              onClick={() => {
-                reset();
-                setView("board");
-              }}
-            >
-              <Kanban size={18} />
-              <span>팀 보드</span>
-              <span className="header-count">{board.tasks.length}</span>
-            </button>
-            <button
-              className={mine ? "active" : ""}
-              aria-current={mine ? "page" : undefined}
-              onClick={() => {
-                setMine(true);
-                setMember("");
-                setQuery("");
-                setTag("");
-              }}
-            >
-              <NotePencil size={18} />
-              <span>내 할 일</span>
-            </button>
-            <button
-              onClick={() => {
-                setDraft({ memo: board.memo });
-                setModal("memo");
-              }}
-            >
-              <Users size={18} />
-              <span>팀 메모</span>
-            </button>
-          </nav>
-          <div className="header-actions">
-            <button
-              className="header-tool"
-              aria-label="도움말"
-              title="도움말"
-              onClick={() => setModal("help")}
-            >
-              <Question size={21} />
-            </button>
-            <button
-              className="header-tool"
-              aria-label="보드 설정"
-              title="보드 설정"
-              onClick={() => {
-                setDraft({ name: board.name });
-                setModal("settings");
-              }}
-            >
-              <GearSix size={21} />
-            </button>
-            <span className="header-divider" />
-            <button
-              className="header-profile"
-              aria-label="지민의 카드 보기"
-              aria-pressed={mine}
-              onClick={() => setMine(!mine)}
-            >
-              <Avatar id="ji" />
-            </button>
+          <button
+            className="rail-button"
+            aria-label="카드 검색"
+            onClick={() => search.current?.focus()}
+          >
+            <MagnifyingGlass size={22} />
+          </button>
+          <button
+            className="rail-button"
+            aria-label="빠른 카드 추가"
+            onClick={resumeDraft}
+          >
+            <Plus size={23} />
+          </button>
+        </div>
+        <div className="rail-bottom">
+          <button
+            className="rail-button"
+            aria-label="도움말"
+            onClick={() => setModal("help")}
+          >
+            <Question size={22} />
+          </button>
+          <button
+            className="profile-button"
+            aria-label="지민의 카드 보기"
+            onClick={() => setMine(!mine)}
+          >
+            <Avatar id="ji" />
+          </button>
+        </div>
+      </nav>
+      <aside className="sidebar">
+        <div className="workspace">
+          <span className="workspace-icon">
+            <SquaresFour size={24} weight="duotone" />
+          </span>
+          <div>
+            <strong>SynergeLab</strong>
+            <span>작은 팀, 함께 만드는 일</span>
           </div>
         </div>
-      </header>
-      <main className="page-main" id="main-content">
+        <div className="side-label">워크스페이스</div>
+        <nav className="side-nav" aria-label="워크스페이스 탐색">
+          <button
+            className={!mine ? "active" : ""}
+            onClick={() => {
+              reset();
+              setView("board");
+            }}
+          >
+            <Kanban size={19} />
+            <span>팀 보드</span>
+            <span className="nav-count">{board.tasks.length}</span>
+          </button>
+          <button
+            className={mine ? "active" : ""}
+            onClick={() => {
+              setMine(true);
+              setMember("");
+              setQuery("");
+              setTag("");
+            }}
+          >
+            <NotePencil size={19} />
+            <span>내 할 일</span>
+            <span className="nav-count">
+              {
+                board.tasks.filter(
+                  (t) => t.member === "ji" && t.status !== "done",
+                ).length
+              }
+            </span>
+          </button>
+          <button
+            onClick={() => {
+              setDraft({ memo: board.memo });
+              setModal("memo");
+            }}
+          >
+            <Users size={19} />
+            <span>팀 메모</span>
+          </button>
+        </nav>
+        <div className="side-divider" />
+        <button
+          className="side-settings"
+          onClick={() => {
+            setDraft({ name: board.name });
+            setModal("settings");
+          }}
+        >
+          <GearSix size={19} />
+          보드 설정
+        </button>
+        <div className="sidebar-bottom">
+          <div className="team-note">
+            <span className="tiny-label">OUR LITTLE TEAM</span>
+            <p>
+              좋은 아이디어는
+              <br />
+              함께할 때 더 커져요.
+            </p>
+            <div className="mini-members">
+              {MEMBERS.map((m) => (
+                <Avatar key={m.id} id={m.id} size="small" />
+              ))}
+              <span>4명의 작은 팀</span>
+            </div>
+          </div>
+          <div className="local-note">
+            <LockSimple size={14} />
+            <span>서버에 저장되는 팀 보드</span>
+          </div>
+        </div>
+      </aside>
+      <main>
         <header className="topbar">
           <div className="breadcrumbs">
             워크스페이스
@@ -454,15 +510,6 @@ function App() {
               </button>
               {menu && (
                 <div className="popover">
-                  <button
-                    onClick={() => {
-                      setMenu(false);
-                      resumeDraft();
-                    }}
-                  >
-                    <NotePencil size={16} />
-                    작성 중인 카드 이어쓰기
-                  </button>
                   <button onClick={copyLink}>
                     <Users size={16} />
                     공유 링크 복사
