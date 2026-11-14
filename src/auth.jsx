@@ -137,8 +137,8 @@ function LoginScreen() {
   const input = useRef(null),
     submitting = useRef(false);
   useEffect(() => {
-    if (ready) input.current?.focus();
-  }, [ready]);
+    if (ready && !busy) input.current?.focus();
+  }, [ready, busy]);
   async function submit(event) {
     event.preventDefault();
     if (!ready || submitting.current || event.nativeEvent.isComposing) return;
@@ -162,7 +162,6 @@ function LoginScreen() {
             ? error.message
             : "연결을 확인한 뒤 다시 시도해 주세요.",
       );
-      requestAnimationFrame(() => input.current?.focus());
     } finally {
       submitting.current = false;
       setBusy(false);

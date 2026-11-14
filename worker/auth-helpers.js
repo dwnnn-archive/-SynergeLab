@@ -28,12 +28,13 @@ export function sessionCookie(token, maxAge = SESSION_MS / 1000) {
 }
 export function credentials(env) {
   const values = [env.AUTH_PASSWORD_BOM, env.AUTH_PASSWORD_DAEWON];
+  if (env.AUTH_PASSWORD_SEHYEON) values.push(env.AUTH_PASSWORD_SEHYEON);
   if (
     values.some(
       (value) =>
         typeof value !== "string" || value.length < 4 || value.length > 128,
     ) ||
-    values[0] === values[1]
+    new Set(values).size !== values.length
   )
     return null;
   return values;

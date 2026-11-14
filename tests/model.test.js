@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SEED, validBoard, filterTasks, nextId } from "../src/model.js";
+import { checkedBoard, mergeBoards } from "../src/shared-board.js";
 test("stored board validates schema and rejects malformed or duplicate cards", () => {
   assert.equal(validBoard(SEED), true);
   assert.equal(validBoard({ ...SEED, tasks: [null] }), false);
@@ -33,12 +34,24 @@ test("new card ID remains unique after deletions and empty boards stay valid", (
   assert.equal(validBoard({ ...SEED, tasks: [] }), true);
 });
 
-test("로그인 계정 추가 후에도 기존 담당자 카드 데이터를 허용한다", () => {
-  const legacy = { ...SEED, tasks: [{ ...SEED.tasks[0], member: "ji" }] };
-  assert.equal(validBoard(legacy), true);
-  assert.equal(filterTasks(legacy.tasks, { member: "ji" })[0].member, "ji");
-  assert.equal(
-    filterTasks(legacy.tasks, { mine: true, mineId: "bom" }).length,
-    0,
+test("삭제된 네 담당자의 배정을 해제하면서 카드 내용과 순서는 보존한다", () => {
+  const legacy = {
+    ...SEED,
+    tasks: ["ji", "su", "ha", "do"].map((member, index) => ({
+      ...SEED.tasks[index],
+      member,
+      position: index * 10,
+    })),
+  };
+  const migrated = checkedBoard(legacy);
+  assert.ok(migrated.tasks.every((task) => task.member === ""));
+  assert.deepEqual(
+    migrated.tasks,
+    legacy.tasks.map((task) => ({ ...task, member: "" })),
   );
+  const staleEdit = structuredClone(legacy);
+  staleEdit.tasks[0].title = "이전 창에서 수정한 제목";
+  const merged = mergeBoards(migrated, legacy, staleEdit);
+  assert.equal(merged.tasks[0].title, "이전 창에서 수정한 제목");
+  assert.ok(merged.tasks.every((task) => task.member === ""));
 });

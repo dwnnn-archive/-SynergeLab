@@ -33,8 +33,7 @@ import {
   SEED,
   STATUSES,
   MEMBERS,
-  ALL_MEMBERS,
-  LEGACY_MEMBERS,
+  activeMember,
   TAGS,
   validBoard,
   filterTasks,
@@ -50,7 +49,7 @@ import { ProfileSettings } from "./ProfileSettings.jsx";
 function Avatar({ id, size = "", ...props }) {
   const { members } = useAuth();
   const member =
-    members.find((m) => m.id === id) || ALL_MEMBERS.find((m) => m.id === id);
+    members.find((m) => m.id === id) || MEMBERS.find((m) => m.id === id);
   return (
     <span
       className={`avatar ${member?.color || "empty"} ${size}`}
@@ -210,6 +209,7 @@ function App() {
         resumeBase.current = validBoard(d?.base) ? d.base : null;
         setDraft({
           ...restored,
+          member: activeMember(restored.member),
           newId: restored.newId || `SL-${crypto.randomUUID()}`,
         });
         setModal("task");
@@ -357,12 +357,6 @@ function App() {
     mine,
     mineId: user.id,
   });
-  const visibleMembers = [
-    ...MEMBERS,
-    ...LEGACY_MEMBERS.filter((member) =>
-      board.tasks.some((task) => task.member === member.id),
-    ),
-  ];
   const hasFilter = !!(query || member || tag || mine);
   const reset = () => {
     setQuery("");
@@ -702,7 +696,7 @@ function App() {
               )}
             </div>
             <div className="member-filters" aria-label="담당자 필터">
-              {visibleMembers.map((m) => (
+              {MEMBERS.map((m) => (
                 <button
                   key={m.id}
                   className={member === m.id ? "chosen" : ""}
@@ -912,7 +906,7 @@ function App() {
                   </select>
                   <span className="list-member">
                     <Avatar id={task.member} size="small" />
-                    {ALL_MEMBERS.find((m) => m.id === task.member)?.name ||
+                    {MEMBERS.find((m) => m.id === task.member)?.name ||
                       "미지정"}
                   </span>
                 </div>
@@ -1104,13 +1098,6 @@ function App() {
                           }
                         >
                           <option value="">담당자 없음</option>
-                          {LEGACY_MEMBERS.filter(
-                            (m) => m.id === draft.member,
-                          ).map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.name}
-                            </option>
-                          ))}
                           {MEMBERS.map((m) => (
                             <option key={m.id} value={m.id}>
                               {m.name}

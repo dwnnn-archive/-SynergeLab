@@ -31,3 +31,7 @@ During a card drag, a 3px green line (`--drop-marker: #279566`) with small round
 The login screen uses a static board-shaped background with a 20px blur and 0.55 opacity. The real board is never rendered before server authentication. A centered white panel (390px maximum width) contains the blue SynergeLab mark, one password input and one primary action. Invalid passwords clear the input and show the inline Korean message with reserved vertical space. Desktop and mobile retain the same form hierarchy.
 
 The large rail avatar belongs to the signed-in account. It shows a circular uploaded photo or the first character of the name. Profile settings reuse the existing native dialog, buttons and error styles; uploaded photos are square-cropped, and the rest of the compact board layout remains unchanged.
+
+## Column labels and current members
+
+The uppercase column labels (TO DO / IN PROGRESS / DONE) use 10.67px type, increased by approximately 2pt from 8px. Column actions and compact card sizes stay unchanged. Member controls list 봄, 대원 and 세현; retired member names are not rendered. 세현 has no password and cannot sign in yet.

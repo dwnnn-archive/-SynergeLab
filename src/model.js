@@ -6,13 +6,8 @@ export const STATUSES = [
   { id: "done", name: "완료", english: "DONE" },
 ];
 export const MEMBERS = ACCOUNTS;
-export const LEGACY_MEMBERS = [
-  { id: "ji", name: "지민", color: "rose" },
-  { id: "su", name: "수현", color: "blue" },
-  { id: "ha", name: "하린", color: "purple" },
-  { id: "do", name: "도윤", color: "green" },
-];
-export const ALL_MEMBERS = [...MEMBERS, ...LEGACY_MEMBERS];
+const RETIRED_MEMBER_IDS = ["ji", "su", "ha", "do"];
+export const activeMember = (id) => (RETIRED_MEMBER_IDS.includes(id) ? "" : id);
 export const TAGS = ["기획", "디자인", "개발", "운영"];
 export const SEED = {
   version: 1,
@@ -119,7 +114,8 @@ export function validBoard(value) {
         typeof t.description === "string" &&
         STATUSES.some((s) => s.id === t.status) &&
         TAGS.includes(t.tag) &&
-        (t.member === "" || ALL_MEMBERS.some((m) => m.id === t.member)) &&
+        (activeMember(t.member) === "" ||
+          MEMBERS.some((m) => m.id === t.member)) &&
         typeof t.priority === "boolean" &&
         (t.position === undefined ||
           (Number.isFinite(t.position) && Math.abs(t.position) <= 1e12)),

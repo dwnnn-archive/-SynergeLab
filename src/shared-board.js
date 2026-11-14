@@ -1,4 +1,4 @@
-import { validBoard } from "./model.js";
+import { validBoard, activeMember } from "./model.js";
 export class ConflictError extends Error {}
 export function checkedBoard(value) {
   if (
@@ -32,7 +32,7 @@ export function checkedBoard(value) {
         description,
         status,
         tag,
-        member,
+        member: activeMember(member),
         priority,
         position: position ?? index * 1024,
       }),

@@ -2,7 +2,7 @@
 
 ## Scope and authority
 
-User brief: simple Kanban notes for a small personal team, inspired by supplied screenshot, implementation choices delegated. User follow-up explicitly requests real-time team sharing, persistence after browser close, and Cloudflare connection guidance. Cloudflare Workers + SQLite-backed Durable Objects own shared state; WebSockets broadcast saved changes. A valid team-account session and a 192-bit random board link are both required for read/write. The user requested password-only accounts 봄 and 대원; both have the same board permissions. See AUTH.md for the server-owned authentication contract. Legacy assignees remain readable; tasks are editable. Cards can freely move between three statuses. Removal uses an in-app confirmation and Undo. Backup is a local JSON download.
+User brief: simple Kanban notes for a small personal team, inspired by supplied screenshot, implementation choices delegated. User follow-up explicitly requests real-time team sharing, persistence after browser close, and Cloudflare connection guidance. Cloudflare Workers + SQLite-backed Durable Objects own shared state; WebSockets broadcast saved changes. A valid team-account session and a 192-bit random board link are both required for read/write. The user requested password-only accounts 봄 and 대원, and later added 세현 without a password. 세현 can be assigned tasks but cannot sign in until a password is configured. Active accounts have the same board permissions. See AUTH.md for the server-owned authentication contract. The four retired assignee IDs are accepted only for migration and normalized to unassigned; tasks are editable. Cards can freely move between three statuses. Removal uses an in-app confirmation and Undo. Backup is a local JSON download.
 
 ## Canonical UI Map
 
@@ -34,6 +34,8 @@ Cloudflare Durable Object SQLite is authoritative. HTTP mutation completion ackn
 
 ## 로그인과 프로필
 
-사용자 요청에 따라 비밀번호 한 칸으로 봄·대원 계정을 식별합니다. 인증의 소유자는 서버 AuthRoom이며 클라이언트 AuthProvider는 확인된 세션이 있을 때만 보드를 마운트합니다. 로그인 배경은 강하게 흐린 정적 예시 화면이며 실제 보드 내용은 포함하지 않습니다. 비밀번호 오류는 팝업 없이 입력칸 아래 ‘틀렸습니다.’로 표시하고 입력값을 지웁니다.
+사용자 요청에 따라 비밀번호 한 칸으로 봄·대원 계정을 식별합니다. 추가된 세현 계정은 비밀번호 미설정으로 로그인할 수 없으며 담당자 목록에는 표시합니다. 인증의 소유자는 서버 AuthRoom이며 클라이언트 AuthProvider는 확인된 세션이 있을 때만 보드를 마운트합니다. 로그인 배경은 강하게 흐린 정적 예시 화면이며 실제 보드 내용은 포함하지 않습니다. 비밀번호 오류는 팝업 없이 입력칸 아래 ‘틀렸습니다.’로 표시하고 입력값을 지웁니다.
 
 왼쪽 큰 프로필은 현재 로그인한 계정의 사진 또는 이름 첫 글자를 표시하며 기존 공통 편집 대화상자에서 사진 등록·변경·제거와 로그아웃을 제공합니다. 사진은 서버의 해당 계정 프로필에 저장합니다. 입력과 저장 실패 시 기존 사진은 유지하며 오류를 화면 안에 표시합니다. 로그인·사진 저장 규칙과 환경 설정은 AUTH.md를 따릅니다.
+
+삭제한 지민·수현·하린·도윤은 필터·담당자 선택·아바타 목록에서 제거합니다. 서버는 기존 카드의 해당 담당자 ID를 빈 값으로 바꾸고 최초 조회 시 배정 해제를 저장합니다. 이전 창의 수정 요청과 임시 초안도 삭제한 담당자를 복원하지 않습니다. 카드 내용·순서는 유지합니다.

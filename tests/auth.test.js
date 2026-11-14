@@ -22,6 +22,19 @@ test("두 계정을 비밀번호로 식별하고 임의의 입력은 거부한�
   assert.equal(await matchPassword(values[1], values), 1);
   assert.equal(await matchPassword("incorrect", values), -1);
 });
+
+test("세현 비밀번호를 설정하지 않아도 기존 계정은 유지되고 빈 비밀번호는 일치하지 않는다", async () => {
+  const env = {
+    AUTH_PASSWORD_BOM: randomToken(),
+    AUTH_PASSWORD_DAEWON: randomToken(),
+  };
+  const values = credentials(env);
+  assert.equal(values.length, 2);
+  assert.equal(await matchPassword(env.AUTH_PASSWORD_BOM, values), 0);
+  assert.equal(await matchPassword(env.AUTH_PASSWORD_DAEWON, values), 1);
+  assert.equal(await matchPassword("", values), -1);
+  assert.deepEqual(credentials({ ...env, AUTH_PASSWORD_SEHYEON: "" }), values);
+});
 test("세션 쿠키는 안전한 속성과 충분한 무작위 값을 사용한다", () => {
   const token = randomToken();
   assert.match(token, /^[a-f0-9]{64}$/);
