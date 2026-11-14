@@ -234,6 +234,14 @@ function App() {
       id: draft.id || draft.newId,
     };
     const base = draft.id ? editBase.current || board : board;
+    if (draft.id && !base.tasks.some((item) => item.id === draft.id)) {
+      const message =
+        "삭제된 카드입니다. 작성한 내용을 새 카드로 복원할 수 있어요.";
+      setConflict(true);
+      setError(message);
+      setStorageError(message);
+      return;
+    }
     let tasks = draft.id
       ? base.tasks.map((t) => (t.id === draft.id ? task : t))
       : [...base.tasks, task];
@@ -977,13 +985,28 @@ function App() {
                   <button
                     className="secondary"
                     onClick={() => {
+                      if (
+                        modal === "task" &&
+                        draft.id &&
+                        !board.tasks.some((task) => task.id === draft.id)
+                      ) {
+                        setDraft({
+                          ...draft,
+                          id: null,
+                          newId: `SL-${crypto.randomUUID()}`,
+                        });
+                      }
                       editBase.current = board;
                       setConflict(false);
                       setError("");
                       setStorageError("");
                     }}
                   >
-                    최신 내용 확인했어요 · 다시 편집
+                    {modal === "task" &&
+                    draft.id &&
+                    !board.tasks.some((task) => task.id === draft.id)
+                      ? "삭제 확인 · 새 카드로 복원"
+                      : "최신 내용 확인했어요 · 다시 편집"}
                   </button>
                 </div>
               )}

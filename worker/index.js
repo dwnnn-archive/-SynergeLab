@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 export { AuthRoom } from "./auth.js";
+import { broadcastBoard, checkBoardSession } from "./board-events.js";
 import {
   checkedBoard,
   mergeBoards,
@@ -78,34 +79,7 @@ export class BoardRoom extends DurableObject {
     await this.ctx.storage.sync();
   }
   async broadcast(board) {
-    const sockets = this.ctx.getWebSockets();
-    if (!sockets.length) return;
-    const hashes = sockets
-      .map((socket) => socket.deserializeAttachment()?.hash)
-      .filter(Boolean);
-    let valid = [];
-    try {
-      const response = await this.auth.fetch("https://auth/internal/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hashes }),
-      });
-      valid = (await response.json()).valid || [];
-    } catch {
-      /* A failed auth check never releases a board update. */
-    }
-    for (const socket of sockets)
-      try {
-        if (!valid.includes(socket.deserializeAttachment()?.hash)) {
-          socket.close(1008, "Login required");
-          continue;
-        }
-        socket.send(JSON.stringify(board));
-      } catch {
-        try {
-          socket.close(1011, "Reconnect");
-        } catch {}
-      }
+    await broadcastBoard(this.auth, this.ctx.getWebSockets(), board);
   }
   async fetch(request) {
     const url = new URL(request.url);
@@ -210,14 +184,10 @@ export default {
         /^\/api\/boards\/([a-f0-9]{48})(\/events)?$/,
       );
       if (!match) return json({ error: "잘못된 보드 주소입니다." }, 404);
-      const authorization = await auth.fetch(
-        new Request("https://auth/internal/check", {
-          headers: { Cookie: request.headers.get("Cookie") || "" },
-        }),
-      );
-      if (!authorization.ok)
-        return json({ error: "로그인이 필요합니다." }, 401);
-      const session = await authorization.json();
+      const authorization = await checkBoardSession(auth, request);
+      if (authorization.error)
+        return json({ error: authorization.error }, authorization.status);
+      const { session } = authorization;
       const headers = new Headers(request.headers);
       headers.set("X-Session-Hash", session.hash);
       return env.BOARDS.get(env.BOARDS.idFromName(match[1])).fetch(

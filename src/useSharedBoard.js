@@ -70,7 +70,9 @@ export function useSharedBoard() {
           window.dispatchEvent(new Event("synergelab-auth-expired"));
           return;
         }
-        requestBoard(boardId).catch(() => {});
+        requestBoard(boardId)
+          .then(apply)
+          .catch(() => {});
         setStatus("offline");
         clearTimeout(reconnect);
         reconnect = setTimeout(

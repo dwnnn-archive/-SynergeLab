@@ -38,23 +38,25 @@ export function AuthProvider({ children }) {
     setMembers(data.members || []);
   }
   useEffect(() => {
-    let stopped = false;
+    let stopped = false,
+      latestRefresh = 0;
     async function refresh() {
       const started = generation.current;
+      const requestNumber = ++latestRefresh;
+      const isCurrent = () =>
+        !stopped &&
+        started === generation.current &&
+        requestNumber === latestRefresh;
       try {
         const data = await authRequest("/api/session");
-        if (!stopped && started === generation.current) apply(data);
+        if (isCurrent()) apply(data);
       } catch (error) {
-        if (
-          !stopped &&
-          started === generation.current &&
-          error.status === 401
-        ) {
+        if (isCurrent() && error.status === 401) {
           setUser(null);
           setMembers([]);
         }
       } finally {
-        if (!stopped) setReady(true);
+        if (isCurrent()) setReady(true);
       }
     }
     function expired() {
