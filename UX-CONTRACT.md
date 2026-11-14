@@ -2,7 +2,7 @@
 
 ## Scope and authority
 
-User brief: simple Kanban notes for a small personal team, inspired by supplied screenshot, implementation choices delegated. User follow-up explicitly requests real-time team sharing, persistence after browser close, and Cloudflare connection guidance. Cloudflare Workers + SQLite-backed Durable Objects own shared state; WebSockets broadcast saved changes. Possession of a 192-bit random board link grants read/write; there is no separate identity, member authorization or revocation. Example member names are fixed; tasks are editable. Cards can freely move between three statuses. Removal uses an in-app confirmation and Undo. Backup is a local JSON download.
+User brief: simple Kanban notes for a small personal team, inspired by supplied screenshot, implementation choices delegated. User follow-up explicitly requests real-time team sharing, persistence after browser close, and Cloudflare connection guidance. Cloudflare Workers + SQLite-backed Durable Objects own shared state; WebSockets broadcast saved changes. A valid team-account session and a 192-bit random board link are both required for read/write. The user requested password-only accounts 봄 and 대원; both have the same board permissions. See AUTH.md for the server-owned authentication contract. Legacy assignees remain readable; tasks are editable. Cards can freely move between three statuses. Removal uses an in-app confirmation and Undo. Backup is a local JSON download.
 
 ## Canonical UI Map
 
@@ -20,7 +20,7 @@ Create/edit saves return to current view. Invalid titles retain the editor and f
 
 ## Storage
 
-Cloudflare Durable Object SQLite is authoritative. HTTP mutation completion acknowledges durable storage; only confirmed saved board data updates the screen. WebSocket snapshots are versioned to reject stale arrivals. Independent card changes merge; same-card, board-name or memo conflicts return 409 and preserve the editor draft for explicit review. Save retries use stable creation IDs. Failed saves retain the draft and never claim success. Drafts and their edit baseline are retained in sessionStorage; the browser stores the last shared board ID in localStorage. Legacy local data is migrated on initial board creation at the same origin and retained locally. Shared links grant access and must be treated as private team links. Existing Cloudflare namespace is preserved across deployments. Test/local and deployed Cloudflare data are separate.
+Cloudflare Durable Object SQLite is authoritative. HTTP mutation completion acknowledges durable storage; only confirmed saved board data updates the screen. WebSocket snapshots are versioned to reject stale arrivals. Independent card changes merge; same-card, board-name or memo conflicts return 409 and preserve the editor draft for explicit review. Save retries use stable creation IDs. Failed saves retain the draft and never claim success. Drafts and their edit baseline are retained in sessionStorage; the browser stores the last shared board ID in localStorage. Legacy local data is migrated on initial board creation at the same origin and retained locally. Shared links identify the board; authenticated team accounts are required to access it. Draft keys include the account ID. Existing Cloudflare namespace is preserved across deployments. Test/local and deployed Cloudflare data are separate.
 
 ## Git 작성 규칙
 
@@ -31,3 +31,9 @@ Cloudflare Durable Object SQLite is authoritative. HTTP mutation completion ackn
 사용자가 요청한 삽입선은 실제 저장될 위치를 표시합니다. 같은 열 안에서 순서를 바꾸거나 다른 열로 옮길 수 있으며, 드롭·취소·보드 이탈 시 표시선을 제거합니다. 저장 확인 전까지 화면 순서는 유지하고 저장 실패 시 기존 오류 안내를 표시합니다. 필터로 숨겨진 카드는 삭제하거나 재정렬하지 않습니다. 필터 결과가 비어 있는 열에 놓으면 해당 열 전체의 맨 아래에 저장합니다.
 
 카드의 선택적 숫자 `position` 필드가 정렬 순서를 소유합니다. 서버는 위치 값이 없는 기존 카드를 원래 배열 순서로 읽어 호환성을 유지합니다. 일반적인 이동은 이동한 카드의 위치만 바꾸며, 숫자 간격이 소진되거나 동률 사이에 삽입하면 대상 열의 간격만 재배치합니다. 같은 카드의 동시 수정은 기존 409 충돌 처리로 보호하고, 다른 카드의 독립적인 변경은 병합합니다. 순서는 서버 저장·실시간 공유·새로고침에 동일하게 적용합니다. 터치·키보드 사용자는 카드 편집창의 네이티브 ‘카드 위치’ 선택으로 같은 작업을 수행합니다.
+
+## 로그인과 프로필
+
+사용자 요청에 따라 비밀번호 한 칸으로 봄·대원 계정을 식별합니다. 인증의 소유자는 서버 AuthRoom이며 클라이언트 AuthProvider는 확인된 세션이 있을 때만 보드를 마운트합니다. 로그인 배경은 강하게 흐린 정적 예시 화면이며 실제 보드 내용은 포함하지 않습니다. 비밀번호 오류는 팝업 없이 입력칸 아래 ‘틀렸습니다.’로 표시하고 입력값을 지웁니다.
+
+왼쪽 큰 프로필은 현재 로그인한 계정의 사진 또는 이름 첫 글자를 표시하며 기존 공통 편집 대화상자에서 사진 등록·변경·제거와 로그아웃을 제공합니다. 사진은 서버의 해당 계정 프로필에 저장합니다. 입력과 저장 실패 시 기존 사진은 유지하며 오류를 화면 안에 표시합니다. 로그인·사진 저장 규칙과 환경 설정은 AUTH.md를 따릅니다.

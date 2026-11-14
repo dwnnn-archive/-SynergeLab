@@ -33,6 +33,8 @@ import {
   SEED,
   STATUSES,
   MEMBERS,
+  ALL_MEMBERS,
+  LEGACY_MEMBERS,
   TAGS,
   validBoard,
   filterTasks,
@@ -42,20 +44,31 @@ import {
 } from "./model";
 import "./styles.css";
 import { useSharedBoard } from "./useSharedBoard";
+import { AuthProvider, useAuth } from "./auth.jsx";
+import { ProfileSettings } from "./ProfileSettings.jsx";
 
 function Avatar({ id, size = "", ...props }) {
-  const member = MEMBERS.find((m) => m.id === id);
+  const { members } = useAuth();
+  const member =
+    members.find((m) => m.id === id) || ALL_MEMBERS.find((m) => m.id === id);
   return (
     <span
       className={`avatar ${member?.color || "empty"} ${size}`}
       title={member?.name || "담당자 없음"}
       {...props}
     >
-      {member ? member.name.slice(0, 1) : <Users size={13} />}
+      {member?.avatar ? (
+        <img src={member.avatar} alt="" />
+      ) : member ? (
+        member.name.slice(0, 1)
+      ) : (
+        <Users size={13} />
+      )}
     </span>
   );
 }
 function App() {
+  const { user } = useAuth();
   const { board, id: boardId, status, loadError, save } = useSharedBoard();
   const [storageError, setStorageError] = useState("");
   const [conflict, setConflict] = useState(false);
@@ -105,7 +118,7 @@ function App() {
     if (modal === "task" && draft) {
       try {
         sessionStorage.setItem(
-          `synergelab-draft-${boardId}`,
+          `synergelab-draft-${user.id}-${boardId}`,
           JSON.stringify({ draft, base: editBase.current }),
         );
       } catch {}
@@ -182,7 +195,7 @@ function App() {
     }
     if (discard && modal === "task") {
       try {
-        sessionStorage.removeItem(`synergelab-draft-${boardId}`);
+        sessionStorage.removeItem(`synergelab-draft-${user.id}-${boardId}`);
       } catch {}
     }
     setModal(null);
@@ -190,7 +203,7 @@ function App() {
   function resumeDraft() {
     try {
       const d = JSON.parse(
-        sessionStorage.getItem(`synergelab-draft-${boardId}`),
+        sessionStorage.getItem(`synergelab-draft-${user.id}-${boardId}`),
       );
       const restored = d?.draft || d;
       if (restored && typeof restored.title === "string") {
@@ -337,7 +350,19 @@ function App() {
         )}
       </main>
     );
-  const filtered = filterTasks(board.tasks, { query, member, tag, mine });
+  const filtered = filterTasks(board.tasks, {
+    query,
+    member,
+    tag,
+    mine,
+    mineId: user.id,
+  });
+  const visibleMembers = [
+    ...MEMBERS,
+    ...LEGACY_MEMBERS.filter((member) =>
+      board.tasks.some((task) => task.member === member.id),
+    ),
+  ];
   const hasFilter = !!(query || member || tag || mine);
   const reset = () => {
     setQuery("");
@@ -395,10 +420,11 @@ function App() {
           </button>
           <button
             className="profile-button"
-            aria-label="지민의 카드 보기"
-            onClick={() => setMine(!mine)}
+            aria-label={`${user.name} 프로필 설정`}
+            title={`${user.name} · 프로필 설정`}
+            onClick={() => setModal("profile")}
           >
-            <Avatar id="ji" />
+            <Avatar id={user.id} />
           </button>
         </div>
       </nav>
@@ -439,7 +465,7 @@ function App() {
             <span className="nav-count">
               {
                 board.tasks.filter(
-                  (t) => t.member === "ji" && t.status !== "done",
+                  (t) => t.member === user.id && t.status !== "done",
                 ).length
               }
             </span>
@@ -477,7 +503,7 @@ function App() {
               {MEMBERS.map((m) => (
                 <Avatar key={m.id} id={m.id} size="small" />
               ))}
-              <span>4명의 작은 팀</span>
+              <span>{MEMBERS.length}명의 작은 팀</span>
             </div>
           </div>
           <div className="local-note">
@@ -676,7 +702,7 @@ function App() {
               )}
             </div>
             <div className="member-filters" aria-label="담당자 필터">
-              {MEMBERS.map((m) => (
+              {visibleMembers.map((m) => (
                 <button
                   key={m.id}
                   className={member === m.id ? "chosen" : ""}
@@ -886,7 +912,7 @@ function App() {
                   </select>
                   <span className="list-member">
                     <Avatar id={task.member} size="small" />
-                    {MEMBERS.find((m) => m.id === task.member)?.name ||
+                    {ALL_MEMBERS.find((m) => m.id === task.member)?.name ||
                       "미지정"}
                   </span>
                 </div>
@@ -939,7 +965,9 @@ function App() {
                           ? "보드 설정"
                           : modal === "share"
                             ? "팀원에게 보드 공유"
-                            : "우리 팀 보드 사용하기"}
+                            : modal === "profile"
+                              ? "내 프로필"
+                              : "우리 팀 보드 사용하기"}
                   </h2>
                 </div>
                 <button
@@ -955,7 +983,7 @@ function App() {
                   {error}
                 </p>
               )}
-              {conflict && (
+              {conflict && modal !== "profile" && (
                 <div className="delete-confirm">
                   <p>
                     최신 서버 내용과 작성한 내용을 비교해 주세요. 아래 버튼을
@@ -1076,6 +1104,13 @@ function App() {
                           }
                         >
                           <option value="">담당자 없음</option>
+                          {LEGACY_MEMBERS.filter(
+                            (m) => m.id === draft.member,
+                          ).map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}
+                            </option>
+                          ))}
                           {MEMBERS.map((m) => (
                             <option key={m.id} value={m.id}>
                               {m.name}
@@ -1186,6 +1221,15 @@ function App() {
                     </footer>
                   </fieldset>
                 </form>
+              )}
+              {modal === "profile" && (
+                <ProfileSettings
+                  onBusy={(value) => {
+                    busyRef.current = value;
+                    setBusy(value);
+                  }}
+                  onSaved={notify}
+                />
               )}
               {modal === "memo" && (
                 <form
@@ -1306,9 +1350,8 @@ function App() {
                     />
                   </label>
                   <p className="help-note">
-                    링크가 있는 사람은 열람과 편집이 가능합니다. 신뢰하는
-                    팀원에게만 공유하세요. 브라우저를 닫아도 저장된 내용은 남아
-                    있습니다.
+                    팀 계정으로 로그인한 뒤 이 링크로 함께 열람하고 편집할 수
+                    있습니다. 브라우저를 닫아도 저장된 내용은 남아 있습니다.
                   </p>
                   <button className="primary" onClick={copyLink}>
                     링크 복사
@@ -1335,11 +1378,11 @@ function App() {
                     </li>
                   </ol>
                   <p className="help-note">
-                    샘플 팀으로 시작합니다. ‘내 할 일’은 지민의 카드입니다.
+                    ‘내 할 일’은 로그인한 계정에 배정된 카드입니다.
                     <br />
                     카드와 메모는 서버에 저장됩니다. 공유 버튼으로 팀원을
-                    초대하세요. 링크를 가진 사람은 보드를 보고 편집할 수
-                    있습니다.
+                    초대하세요. 팀 계정으로 로그인한 팀원이 공유 링크로 보드를
+                    열 수 있습니다.
                   </p>
                   <button className="primary" onClick={() => close()}>
                     시작할게요
@@ -1381,4 +1424,8 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+createRoot(document.getElementById("root")).render(
+  <AuthProvider>
+    <App />
+  </AuthProvider>,
+);

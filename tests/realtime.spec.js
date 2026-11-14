@@ -1,5 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, login } from "./auth-support.js";
 async function ready(page, url = "/") {
+  await login(page.request);
   await page.goto(url);
   await expect(
     page.getByText("실시간 연결 · 서버 저장", { exact: true }),

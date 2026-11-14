@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./auth-support.js";
 import AxeBuilder from "@axe-core/playwright";
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -20,7 +20,7 @@ test("create, validate, edit, persist, delete and undo a card", async ({
     .getByLabel("카드 제목", { exact: true })
     .fill("브라우저 테스트 카드");
   await page.getByLabel("내용", { exact: true }).fill("지속 저장 확인");
-  await page.getByLabel("담당자", { exact: true }).selectOption("ha");
+  await page.getByLabel("담당자", { exact: true }).selectOption("bom");
   await page.getByLabel("상태", { exact: true }).selectOption("doing");
   await page
     .getByRole("button", { name: "카드 추가", exact: true })
@@ -58,8 +58,8 @@ test("search, filters, list status, notes and settings", async ({ page }) => {
   await expect(page.locator(".card")).toHaveCount(0);
   await page.getByRole("button", { name: "검색어 지우기" }).click();
   await expect(page.locator(".card")).toHaveCount(9);
-  await page.getByRole("button", { name: "하린 카드 필터" }).click();
-  await expect(page.locator(".card")).toHaveCount(2);
+  await page.getByRole("button", { name: "봄 카드 필터" }).click();
+  await expect(page.locator(".card")).toHaveCount(5);
   await page.getByRole("button", { name: "초기화", exact: true }).click();
   await page.getByLabel("라벨 필터").selectOption("개발");
   await expect(page.locator(".card")).toHaveCount(1);

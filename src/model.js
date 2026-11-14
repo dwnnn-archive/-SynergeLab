@@ -1,15 +1,18 @@
+import { ACCOUNTS } from "./accounts.js";
 export const KEY = "synergelab-board-v1";
 export const STATUSES = [
   { id: "todo", name: "할 일", english: "TO DO" },
   { id: "doing", name: "진행 중", english: "IN PROGRESS" },
   { id: "done", name: "완료", english: "DONE" },
 ];
-export const MEMBERS = [
+export const MEMBERS = ACCOUNTS;
+export const LEGACY_MEMBERS = [
   { id: "ji", name: "지민", color: "rose" },
   { id: "su", name: "수현", color: "blue" },
   { id: "ha", name: "하린", color: "purple" },
   { id: "do", name: "도윤", color: "green" },
 ];
+export const ALL_MEMBERS = [...MEMBERS, ...LEGACY_MEMBERS];
 export const TAGS = ["기획", "디자인", "개발", "운영"];
 export const SEED = {
   version: 1,
@@ -23,7 +26,7 @@ export const SEED = {
       description: "다음 프로젝트에서 해보고 싶은 것들을 편하게 남겨주세요.",
       status: "todo",
       tag: "기획",
-      member: "ji",
+      member: "bom",
       priority: false,
     },
     {
@@ -32,7 +35,7 @@ export const SEED = {
       description: "좋은 경험을 주는 서비스 3개씩 공유해요.",
       status: "todo",
       tag: "디자인",
-      member: "ha",
+      member: "bom",
       priority: false,
     },
     {
@@ -41,7 +44,7 @@ export const SEED = {
       description: "지난주에 받은 의견을 한곳에 모아볼까요?",
       status: "todo",
       tag: "기획",
-      member: "su",
+      member: "daewon",
       priority: true,
     },
     {
@@ -50,7 +53,7 @@ export const SEED = {
       description: "이야기할 주제와 결정할 내용을 정리해요.",
       status: "todo",
       tag: "운영",
-      member: "do",
+      member: "daewon",
       priority: false,
     },
     {
@@ -59,7 +62,7 @@ export const SEED = {
       description: "할 일부터 완료까지, 한눈에 볼 수 있는 작은 작업 공간.",
       status: "doing",
       tag: "개발",
-      member: "su",
+      member: "daewon",
       priority: true,
     },
     {
@@ -68,7 +71,7 @@ export const SEED = {
       description: "우리다운 느낌을 찾아가고 있어요.",
       status: "doing",
       tag: "디자인",
-      member: "ha",
+      member: "bom",
       priority: false,
     },
     {
@@ -77,7 +80,7 @@ export const SEED = {
       description: "누구를 위해, 무엇을 만드는지 짧고 명확하게.",
       status: "doing",
       tag: "기획",
-      member: "ji",
+      member: "bom",
       priority: false,
     },
     {
@@ -86,7 +89,7 @@ export const SEED = {
       description: "함께 일할 준비를 마쳤어요.",
       status: "done",
       tag: "운영",
-      member: "do",
+      member: "daewon",
       priority: false,
     },
     {
@@ -95,7 +98,7 @@ export const SEED = {
       description: "작게 시작하고, 함께 키워가기로 했어요.",
       status: "done",
       tag: "기획",
-      member: "ji",
+      member: "bom",
       priority: false,
     },
   ],
@@ -116,7 +119,7 @@ export function validBoard(value) {
         typeof t.description === "string" &&
         STATUSES.some((s) => s.id === t.status) &&
         TAGS.includes(t.tag) &&
-        (t.member === "" || MEMBERS.some((m) => m.id === t.member)) &&
+        (t.member === "" || ALL_MEMBERS.some((m) => m.id === t.member)) &&
         typeof t.priority === "boolean" &&
         (t.position === undefined ||
           (Number.isFinite(t.position) && Math.abs(t.position) <= 1e12)),
@@ -126,7 +129,7 @@ export function validBoard(value) {
 }
 export function filterTasks(
   tasks,
-  { query = "", member = "", tag = "", mine = false },
+  { query = "", member = "", tag = "", mine = false, mineId = "bom" },
 ) {
   const q = query.trim().toLocaleLowerCase("ko");
   return orderedTasks(tasks).filter(
@@ -137,7 +140,7 @@ export function filterTasks(
           .includes(q)) &&
       (!member || t.member === member) &&
       (!tag || t.tag === tag) &&
-      (!mine || t.member === "ji"),
+      (!mine || t.member === mineId),
   );
 }
 // Legacy cards receive their existing array order; persisted positions are stable

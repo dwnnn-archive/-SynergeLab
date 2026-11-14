@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./auth-support.js";
 import { randomBytes } from "node:crypto";
 import { SEED } from "../src/model.js";
 test("API enforces validation, board isolation, conflict protection and idempotent retries", async ({

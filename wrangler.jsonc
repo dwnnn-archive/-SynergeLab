@@ -10,8 +10,14 @@
     "run_worker_first": ["/api/*"],
   },
   "durable_objects": {
-    "bindings": [{ "name": "BOARDS", "class_name": "BoardRoom" }],
+    "bindings": [
+      { "name": "BOARDS", "class_name": "BoardRoom" },
+      { "name": "AUTH", "class_name": "AuthRoom" },
+    ],
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BoardRoom"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["BoardRoom"] },
+    { "tag": "v2", "new_sqlite_classes": ["AuthRoom"] },
+  ],
   "observability": { "enabled": false },
 }

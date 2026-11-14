@@ -1,4 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
+export { AuthRoom } from "./auth.js";
 import {
   checkedBoard,
   mergeBoards,
@@ -41,6 +42,7 @@ async function readJSON(request) {
 export class BoardRoom extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
+    this.auth = env.AUTH.get(env.AUTH.idFromName("team"));
     ctx.storage.sql.exec(
       "CREATE TABLE IF NOT EXISTS board (id INTEGER PRIMARY KEY CHECK(id=1), payload TEXT NOT NULL)",
     );
@@ -61,9 +63,29 @@ export class BoardRoom extends DurableObject {
     );
     await this.ctx.storage.sync();
   }
-  broadcast(board) {
-    for (const socket of this.ctx.getWebSockets())
+  async broadcast(board) {
+    const sockets = this.ctx.getWebSockets();
+    if (!sockets.length) return;
+    const hashes = sockets
+      .map((socket) => socket.deserializeAttachment()?.hash)
+      .filter(Boolean);
+    let valid = [];
+    try {
+      const response = await this.auth.fetch("https://auth/internal/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hashes }),
+      });
+      valid = (await response.json()).valid || [];
+    } catch {
+      /* A failed auth check never releases a board update. */
+    }
+    for (const socket of sockets)
       try {
+        if (!valid.includes(socket.deserializeAttachment()?.hash)) {
+          socket.close(1008, "Login required");
+          continue;
+        }
         socket.send(JSON.stringify(board));
       } catch {
         try {
@@ -86,6 +108,9 @@ export class BoardRoom extends DurableObject {
         if (this.ctx.getWebSockets().length >= 50)
           return json({ error: "이 보드의 연결 수가 너무 많습니다." }, 429);
         const [client, server] = Object.values(new WebSocketPair());
+        server.serializeAttachment({
+          hash: request.headers.get("X-Session-Hash"),
+        });
         this.ctx.acceptWebSocket(server);
         server.send(JSON.stringify(board));
         return new Response(null, { status: 101, webSocket: client });
@@ -114,7 +139,7 @@ export class BoardRoom extends DurableObject {
         const updated = mergeBoards(current, base, next);
         if (updated !== current) {
           await this.write(updated);
-          this.broadcast(updated);
+          await this.broadcast(updated);
         }
         return json(updated);
       }
@@ -155,13 +180,35 @@ export default {
     if (url.pathname === "/api/health") return json({ ok: true });
     if (url.pathname.startsWith("/api/")) {
       const origin = request.headers.get("Origin");
-      if (origin && origin !== url.origin)
+      if (
+        (origin && origin !== url.origin) ||
+        request.headers.get("Sec-Fetch-Site") === "cross-site"
+      )
         return json({ error: "허용되지 않은 요청입니다." }, 403);
+      const auth = env.AUTH.get(env.AUTH.idFromName("team"));
+      if (
+        ["/api/login", "/api/logout", "/api/session", "/api/profile"].includes(
+          url.pathname,
+        )
+      )
+        return auth.fetch(request);
       const match = url.pathname.match(
         /^\/api\/boards\/([a-f0-9]{48})(\/events)?$/,
       );
       if (!match) return json({ error: "잘못된 보드 주소입니다." }, 404);
-      return env.BOARDS.get(env.BOARDS.idFromName(match[1])).fetch(request);
+      const authorization = await auth.fetch(
+        new Request("https://auth/internal/check", {
+          headers: { Cookie: request.headers.get("Cookie") || "" },
+        }),
+      );
+      if (!authorization.ok)
+        return json({ error: "로그인이 필요합니다." }, 401);
+      const session = await authorization.json();
+      const headers = new Headers(request.headers);
+      headers.set("X-Session-Hash", session.hash);
+      return env.BOARDS.get(env.BOARDS.idFromName(match[1])).fetch(
+        new Request(request, { headers }),
+      );
     }
     return env.ASSETS.fetch(request);
   },

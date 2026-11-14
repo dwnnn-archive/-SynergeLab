@@ -41,6 +41,6 @@ Cloudflare 빌드 명령에도 테스트와 형식 검사를 넣었으므로, �
 
 기존 Worker 이름 `synergelab-kanban`, Durable Object 클래스 `BoardRoom`, 바인딩 `BOARDS`, 기존 마이그레이션을 유지합니다. UI 코드 업데이트가 보드 데이터를 초기화하지 않습니다. 로컬 `.wrangler/state`, 환경 변수 파일, 로그인 정보, `node_modules`, `dist`는 Git에 올리지 않습니다.
 
-공유 링크는 계속 `#board=…`를 포함한 전체 링크를 사용하세요. 링크를 가진 사람은 해당 보드를 읽고 편집할 수 있습니다.
+공유 링크는 계속 `#board=…`를 포함한 전체 링크를 사용하세요. 팀 계정으로 로그인한 팀원이 해당 보드를 읽고 편집할 수 있습니다. 로그인 기능 배포 전 [AUTH.md](./AUTH.md)에 따라 Worker 실행 비밀값 두 개를 등록하세요.
 
 공식 안내: https://developers.cloudflare.com/workers/ci-cd/builds/

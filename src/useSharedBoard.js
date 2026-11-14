@@ -10,6 +10,8 @@ export async function requestBoard(id, method = "GET", body) {
   });
   const data = await response.json();
   if (!response.ok) {
+    if (response.status === 401)
+      window.dispatchEvent(new Event("synergelab-auth-expired"));
     const error = new Error(data.error || "서버 요청에 실패했습니다.");
     error.board = data.board;
     error.status = response.status;
@@ -62,8 +64,13 @@ export function useSharedBoard() {
           lastPong = Date.now();
         } catch {}
       };
-      socket.onclose = () => {
+      socket.onclose = (event) => {
         if (stopped) return;
+        if (event.code === 1008) {
+          window.dispatchEvent(new Event("synergelab-auth-expired"));
+          return;
+        }
+        requestBoard(boardId).catch(() => {});
         setStatus("offline");
         clearTimeout(reconnect);
         reconnect = setTimeout(

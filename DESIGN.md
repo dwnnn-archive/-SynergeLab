@@ -14,7 +14,7 @@ Runtime source: src/styles.css :root. Brand #1451b8, ink #263448, muted #626f80,
 
 ## Behavior
 
-See UX-CONTRACT.md. All icons use Phosphor. No remote images/fonts needed. Focus, hover, active, reduced-motion and global scrollbars are owned by styles.css. Sample tasks clearly labeled. Cloudflare-backed shared boards. The existing UI is preserved; the header adds a share action and live/server-save status. Members share a capability link.
+See UX-CONTRACT.md. All icons use Phosphor. No remote images/fonts needed. Focus, hover, active, reduced-motion and global scrollbars are owned by styles.css. Sample tasks clearly labeled. Cloudflare-backed shared boards. The existing UI is preserved; the header adds a share action and live/server-save status. Authenticated team members share a board link.
 
 ## Compact cards
 
@@ -25,3 +25,9 @@ Cards use a three-row grid: label/priority alongside ID/assignee, title, then a 
 The breadcrumb bar is 36px high. Main top padding is 10–14px, heading bottom spacing is 8–10px, and board/list tabs are 30px high. These reduce the tall introductory region while preserving text sizes and the sidebar layout. Card density stays unchanged.
 
 During a card drag, a 3px green line (`--drop-marker: #279566`) with small round ends marks the insertion boundary. It is an absolute overlay in the existing card gap, so showing it never pushes cards around. It follows the pointer above/below each card midpoint and supports the beginning, middle, end and empty columns. The editor's native “카드 위치” select provides the same ordering without dragging.
+
+## Password entry and profile
+
+The login screen uses a static board-shaped background with a 20px blur and 0.55 opacity. The real board is never rendered before server authentication. A centered white panel (390px maximum width) contains the blue SynergeLab mark, one password input and one primary action. Invalid passwords clear the input and show the inline Korean message with reserved vertical space. Desktop and mobile retain the same form hierarchy.
+
+The large rail avatar belongs to the signed-in account. It shows a circular uploaded photo or the first character of the name. Profile settings reuse the existing native dialog, buttons and error styles; uploaded photos are square-cropped, and the rest of the compact board layout remains unchanged.
