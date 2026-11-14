@@ -7,7 +7,6 @@ import {
   Kanban,
   List,
   CaretDown,
-  CaretRight,
   Check,
   CheckCircle,
   X,
@@ -26,7 +25,6 @@ import {
   Trash,
   ArrowCounterClockwise,
   SlidersHorizontal,
-  CaretDoubleRight,
 } from "@phosphor-icons/react";
 import {
   KEY,
@@ -44,6 +42,7 @@ import {
 import "./styles.css";
 import { useSharedBoard } from "./useSharedBoard";
 import { AuthProvider, useAuth } from "./auth.jsx";
+import { useCardMotion } from "./useCardMotion";
 import { ProfileSettings } from "./ProfileSettings.jsx";
 
 function Avatar({ id, size = "", ...props }) {
@@ -94,6 +93,9 @@ function App() {
     search = useRef(null),
     titleInput = useRef(null),
     toastTimer = useRef();
+  const boardElement = useRef(null);
+  const createdCard = useRef(null);
+  useCardMotion(boardElement, board, Boolean(modal || drag), createdCard);
   const notify = (message) => {
     setToast(message);
     clearTimeout(toastTimer.current);
@@ -231,7 +233,7 @@ function App() {
       title: draft.title.trim(),
       id: draft.id || draft.newId,
     };
-    const base = editBase.current || board;
+    const base = draft.id ? editBase.current || board : board;
     let tasks = draft.id
       ? base.tasks.map((t) => (t.id === draft.id ? task : t))
       : [...base.tasks, task];
@@ -243,8 +245,12 @@ function App() {
       changedStatus ||
       (draft.beforeId !== undefined && draft.beforeId !== "keep")
     ) {
-      const beforeId =
-        draft.beforeId && draft.beforeId !== "keep" ? draft.beforeId : null;
+      const beforeId = !draft.id
+        ? (orderedTasks(base.tasks).find((t) => t.status === task.status)?.id ??
+          null)
+        : draft.beforeId && draft.beforeId !== "keep"
+          ? draft.beforeId
+          : null;
       if (
         beforeId &&
         !tasks.some((t) => t.id === beforeId && t.status === task.status)
@@ -254,6 +260,7 @@ function App() {
       }
       tasks = placeTask(tasks, task.id, task.status, beforeId);
     }
+    if (!draft.id) createdCard.current = task.id;
     if (
       await commit(
         { ...base, tasks },
@@ -262,6 +269,7 @@ function App() {
       )
     )
       close(true);
+    else createdCard.current = null;
   }
   async function move(id, status, beforeId = null) {
     setDrag("");
@@ -506,45 +514,65 @@ function App() {
           </div>
         </div>
       </aside>
-      <main>
-        <header className="topbar">
-          <div className="breadcrumbs">
-            워크스페이스
-            <CaretRight size={12} />
-            <span>팀 보드</span>
-          </div>
-          <span
-            className={`save-status ${storageError || conflict ? "warning" : ""}`}
-          >
-            <CheckCircle size={16} />
-            {busy
-              ? "저장 중…"
-              : storageError
-                ? "저장 확인 필요"
-                : status === "live"
-                  ? "실시간 연결 · 서버 저장"
-                  : status === "offline"
-                    ? "연결 재시도 중"
-                    : "연결 중…"}
-          </span>
-        </header>
+      <main className="workspace-main">
         <div className="content">
-          <section className="heading">
-            <div>
-              <div className="eyebrow">작게 시작하고, 함께 완성해요</div>
-              <h1>
-                {mine ? "내 할 일" : board.name}
-                <span className="private-badge">
-                  <LockSimple size={12} />팀 공유 보드
-                </span>
-              </h1>
-              <p>우리의 아이디어가 하나씩 완성되는 곳.</p>
+          <h1 className="sr-only">{mine ? "내 할 일" : board.name}</h1>
+          {(storageError || status === "offline") && (
+            <div className="storage-warning" role="alert">
+              <span>
+                {storageError ||
+                  "실시간 연결이 끊겼습니다. 자동으로 다시 연결하고 있습니다."}
+              </span>
+              <button onClick={exportBoard}>현재 보드 내보내기</button>
+              <button onClick={() => location.reload()}>새로 불러오기</button>
+            </div>
+          )}
+          <div className="board-controls">
+            <div className="view-tabs">
+              <div
+                role="tablist"
+                aria-label="보기 방식"
+                onKeyDown={(e) => {
+                  if (
+                    ["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)
+                  ) {
+                    e.preventDefault();
+                    const next =
+                      e.key === "Home"
+                        ? "board"
+                        : e.key === "End"
+                          ? "list"
+                          : view === "board"
+                            ? "list"
+                            : "board";
+                    setView(next);
+                    e.currentTarget
+                      .querySelectorAll("[role=tab]")
+                      [next === "board" ? 0 : 1].focus();
+                  }
+                }}
+              >
+                <button
+                  role="tab"
+                  aria-selected={view === "board"}
+                  className={view === "board" ? "active" : ""}
+                  onClick={() => setView("board")}
+                >
+                  <Kanban size={17} />
+                  보드
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={view === "list"}
+                  className={view === "list" ? "active" : ""}
+                  onClick={() => setView("list")}
+                >
+                  <List size={19} />
+                  목록
+                </button>
+              </div>
             </div>
             <div className="heading-actions">
-              <button className="secondary share-button" onClick={copyLink}>
-                <Users size={16} />
-                공유
-              </button>
               <button
                 className="icon-button"
                 aria-label="보드 옵션"
@@ -606,139 +634,74 @@ function App() {
                 <Plus size={17} weight="bold" />새 카드
               </button>
             </div>
-          </section>
-          {(storageError || status === "offline") && (
-            <div className="storage-warning" role="alert">
-              <span>
-                {storageError ||
-                  "실시간 연결이 끊겼습니다. 자동으로 다시 연결하고 있습니다."}
-              </span>
-              <button onClick={exportBoard}>현재 보드 내보내기</button>
-              <button onClick={() => location.reload()}>새로 불러오기</button>
-            </div>
-          )}
-          <div className="view-tabs">
-            <div
-              role="tablist"
-              aria-label="보기 방식"
-              onKeyDown={(e) => {
-                if (
-                  ["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)
-                ) {
-                  e.preventDefault();
-                  const next =
-                    e.key === "Home"
-                      ? "board"
-                      : e.key === "End"
-                        ? "list"
-                        : view === "board"
-                          ? "list"
-                          : "board";
-                  setView(next);
-                  e.currentTarget
-                    .querySelectorAll("[role=tab]")
-                    [next === "board" ? 0 : 1].focus();
-                }
-              }}
-            >
-              <button
-                role="tab"
-                aria-selected={view === "board"}
-                className={view === "board" ? "active" : ""}
-                onClick={() => setView("board")}
-              >
-                <Kanban size={17} />
-                보드
-              </button>
-              <button
-                role="tab"
-                aria-selected={view === "list"}
-                className={view === "list" ? "active" : ""}
-                onClick={() => setView("list")}
-              >
-                <List size={19} />
-                목록
-              </button>
-            </div>
-            <span className="total-progress">
-              <span className="progress-track">
-                <span
-                  style={{
-                    width: `${board.tasks.length ? (complete / board.tasks.length) * 100 : 0}%`,
-                  }}
-                />
-              </span>
-              {complete} / {board.tasks.length} 완료
-            </span>
-          </div>
-          <div className="toolbar">
-            <div className="search-box">
-              <MagnifyingGlass size={17} />
-              <input
-                ref={search}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="카드 검색하기"
-                aria-label="카드 검색"
-              />
-              {query ? (
-                <button
-                  aria-label="검색어 지우기"
-                  onClick={() => {
-                    setQuery("");
-                    search.current.focus();
-                  }}
-                >
-                  <X size={14} />
+            <div className="toolbar-filters">
+              {hasFilter && (
+                <button className="clear-filters" onClick={reset}>
+                  초기화
+                  <X size={12} />
                 </button>
-              ) : (
-                <kbd>/</kbd>
               )}
-            </div>
-            <div className="member-filters" aria-label="담당자 필터">
-              {MEMBERS.map((m) => (
-                <button
-                  key={m.id}
-                  className={member === m.id ? "chosen" : ""}
-                  aria-label={`${m.name} 카드 필터`}
-                  aria-pressed={member === m.id}
-                  onClick={() => {
-                    setMember(member === m.id ? "" : m.id);
-                    setMine(false);
-                  }}
+              <label className="tag-filter">
+                <SlidersHorizontal size={15} />
+                <select
+                  aria-label="라벨 필터"
+                  value={tag}
+                  onChange={(e) => setTag(e.target.value)}
                 >
-                  <Avatar id={m.id} />
-                </button>
-              ))}
-            </div>
-            <span className="toolbar-divider" />
-            <label className="tag-filter">
-              <SlidersHorizontal size={15} />
-              <select
-                aria-label="라벨 필터"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-              >
-                <option value="">모든 라벨</option>
-                {TAGS.map((t) => (
-                  <option key={t}>{t}</option>
+                  <option value="">모든 라벨</option>
+                  {TAGS.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="member-filters" aria-label="담당자 필터">
+                {MEMBERS.map((m) => (
+                  <button
+                    key={m.id}
+                    className={member === m.id ? "chosen" : ""}
+                    aria-label={`${m.name} 카드 필터`}
+                    aria-pressed={member === m.id}
+                    onClick={() => {
+                      setMember(member === m.id ? "" : m.id);
+                      setMine(false);
+                    }}
+                  >
+                    <Avatar id={m.id} />
+                  </button>
                 ))}
-              </select>
-            </label>
-            {hasFilter && (
-              <button className="clear-filters" onClick={reset}>
-                초기화
-                <X size={12} />
-              </button>
-            )}
-            <span className="toolbar-end">
-              {hasFilter
-                ? `${filtered.length}개의 카드`
-                : "우리 팀의 작업 흐름"}
-            </span>
+              </div>
+              <div className="search-box">
+                <MagnifyingGlass size={17} />
+                <input
+                  ref={search}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="카드 검색하기"
+                  aria-label="카드 검색"
+                />
+                {query ? (
+                  <button
+                    aria-label="검색어 지우기"
+                    onClick={() => {
+                      setQuery("");
+                      search.current.focus();
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                ) : (
+                  <kbd>/</kbd>
+                )}
+              </div>
+            </div>
           </div>
           {view === "board" ? (
-            <div className="board" role="region" aria-label="칸반 보드">
+            <div
+              ref={boardElement}
+              className="board"
+              role="region"
+              aria-label="칸반 보드"
+            >
               {STATUSES.map((status) => {
                 const tasks = filtered.filter((t) => t.status === status.id);
                 return (
@@ -750,6 +713,11 @@ function App() {
                       if (!drag || busyRef.current) return;
                       e.preventDefault();
                       e.dataTransfer.dropEffect = "move";
+                      const scroller = e.currentTarget.querySelector(".cards");
+                      const bounds = scroller.getBoundingClientRect();
+                      if (e.clientY < bounds.top + 28) scroller.scrollTop -= 18;
+                      else if (e.clientY > bounds.bottom - 28)
+                        scroller.scrollTop += 18;
                       const target = dropPosition(e, status.id);
                       setOver((previous) =>
                         previous?.status === target.status &&
@@ -796,7 +764,7 @@ function App() {
                             )}
                           <article
                             data-task-id={task.id}
-                            className={`card ${drag === task.id ? "dragging" : ""}`}
+                            className={`card ${task.priority ? "is-priority" : ""} ${drag === task.id ? "dragging" : ""}`}
                             draggable={!busy}
                             onDragStart={(e) => {
                               setDrag(task.id);
@@ -848,12 +816,15 @@ function App() {
                           </article>
                         </div>
                       ))}
-                      {over?.status === status.id && over.beforeId === null && (
-                        <span
-                          className={`drop-indicator drop-end ${tasks.length === 0 ? "empty" : ""}`}
-                          aria-hidden="true"
-                        />
-                      )}
+                      <div className="drop-tail" aria-hidden="true">
+                        {over?.status === status.id &&
+                          over.beforeId === null && (
+                            <span
+                              className={`drop-indicator drop-end ${tasks.length === 0 ? "empty" : ""}`}
+                              aria-hidden="true"
+                            />
+                          )}
+                      </div>
                       {tasks.length === 0 && (
                         <div className="empty-column">
                           {hasFilter
@@ -920,12 +891,29 @@ function App() {
             </section>
           )}
           <footer className="board-footer">
-            <span>
-              <CaretDoubleRight size={15} />
-              카드를 끌어 옮기거나, 카드를 열어 상태를 변경해 보세요.
+            <span
+              className={`save-status ${storageError || conflict ? "warning" : ""}`}
+            >
+              <CheckCircle size={16} />
+              {busy
+                ? "저장 중…"
+                : storageError
+                  ? "저장 확인 필요"
+                  : status === "live"
+                    ? "실시간 연결 · 서버 저장"
+                    : status === "offline"
+                      ? "연결 재시도 중"
+                      : "연결 중…"}
             </span>
-            <span className="sample-label">
-              샘플 팀 · 자유롭게 수정해 보세요
+            <span className="total-progress">
+              <span className="progress-track">
+                <span
+                  style={{
+                    width: `${board.tasks.length ? (complete / board.tasks.length) * 100 : 0}%`,
+                  }}
+                />
+              </span>
+              {complete} / {board.tasks.length} 완료
             </span>
           </footer>
         </div>
@@ -1120,31 +1108,33 @@ function App() {
                         </select>
                       </label>
                     </div>
-                    <label className="field">
-                      카드 위치
-                      <select
-                        aria-label="카드 위치"
-                        value={draft.beforeId ?? (draft.id ? "keep" : "")}
-                        onChange={(e) =>
-                          setDraft({ ...draft, beforeId: e.target.value })
-                        }
-                      >
-                        {draft.id && (
-                          <option value="keep">현재 위치 유지</option>
-                        )}
-                        {orderedTasks(board.tasks)
-                          .filter(
-                            (t) =>
-                              t.status === draft.status && t.id !== draft.id,
-                          )
-                          .map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {t.title} 앞
-                            </option>
-                          ))}
-                        <option value="">맨 아래</option>
-                      </select>
-                    </label>
+                    {draft.id && (
+                      <label className="field">
+                        카드 위치
+                        <select
+                          aria-label="카드 위치"
+                          value={draft.beforeId ?? (draft.id ? "keep" : "")}
+                          onChange={(e) =>
+                            setDraft({ ...draft, beforeId: e.target.value })
+                          }
+                        >
+                          {draft.id && (
+                            <option value="keep">현재 위치 유지</option>
+                          )}
+                          {orderedTasks(board.tasks)
+                            .filter(
+                              (t) =>
+                                t.status === draft.status && t.id !== draft.id,
+                            )
+                            .map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.title} 앞
+                              </option>
+                            ))}
+                          <option value="">맨 아래</option>
+                        </select>
+                      </label>
+                    )}
                     <label className="check-field">
                       <input
                         type="checkbox"

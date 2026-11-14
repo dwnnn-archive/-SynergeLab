@@ -6,13 +6,13 @@ User brief: simple Kanban notes for a small personal team, inspired by supplied 
 
 ## Canonical UI Map
 
-| Capability     | Canonical owner       | Source of truth | Allowed variants                     | Verification      |
-| -------------- | --------------------- | --------------- | ------------------------------------ | ----------------- |
-| Select/Listbox | Native select         | UX-CONTRACT.md  | Filter and editor; OS popup accepted | Browser selection |
-| Form           | Editor dialog         | src/main.jsx    | Create/edit, validation              | CRUD browser test |
-| Scrollbar      | Global stylesheet     | DESIGN.md       | Horizontal board scrolling           | Narrow screenshot |
-| Toast          | App live status       | src/main.jsx    | Save, move, remove with undo         | Browser test      |
-| CRUD           | App commit and editor | src/main.jsx    | Return to current board/list         | Browser test      |
+| Capability     | Canonical owner       | Source of truth | Allowed variants                        | Verification      |
+| -------------- | --------------------- | --------------- | --------------------------------------- | ----------------- |
+| Select/Listbox | Native select         | UX-CONTRACT.md  | Filter and editor; OS popup accepted    | Browser selection |
+| Form           | Editor dialog         | src/main.jsx    | Create/edit, validation                 | CRUD browser test |
+| Scrollbar      | Global stylesheet     | DESIGN.md       | Column cards and mobile board scrolling | Narrow screenshot |
+| Toast          | App live status       | src/main.jsx    | Save, move, remove with undo            | Browser test      |
+| CRUD           | App commit and editor | src/main.jsx    | Return to current board/list            | Browser test      |
 
 ## Flow ledger
 
@@ -39,3 +39,11 @@ Cloudflare Durable Object SQLite is authoritative. HTTP mutation completion ackn
 왼쪽 큰 프로필은 현재 로그인한 계정의 사진 또는 이름 첫 글자를 표시하며 기존 공통 편집 대화상자에서 사진 등록·변경·제거와 로그아웃을 제공합니다. 사진은 서버의 해당 계정 프로필에 저장합니다. 입력과 저장 실패 시 기존 사진은 유지하며 오류를 화면 안에 표시합니다. 로그인·사진 저장 규칙과 환경 설정은 AUTH.md를 따릅니다.
 
 삭제한 지민·수현·하린·도윤은 필터·담당자 선택·아바타 목록에서 제거합니다. 서버는 기존 카드의 해당 담당자 ID를 빈 값으로 바꾸고 최초 조회 시 배정 해제를 저장합니다. 이전 창의 수정 요청과 임시 초안도 삭제한 담당자를 복원하지 않습니다. 카드 내용·순서는 유지합니다.
+
+## 화면 구성과 새 카드 생성
+
+보드 위의 경로·소개·제목 영역은 제거하며 보드 이름은 접근성을 위한 숨은 제목과 설정에서 유지합니다. 탭은 왼쪽, 라벨·사용자·검색은 오른쪽에 같은 줄로 배치합니다. 좁은 화면에서는 필터만 두 번째 줄로 내려갑니다. 공유는 보드 옵션의 ‘공유 링크 복사’에서 이용합니다. 저장 상태와 완료 진행률은 하단에 표시합니다.
+
+새 카드 창에는 위치 선택이 없으며 현재 보드의 대상 열 맨 앞에 저장합니다. 작성 중 다른 팀원이 추가한 카드도 유지하고 현재 순서를 기준으로 삽입합니다. 기존 카드 수정에는 위치 선택을 유지합니다. 서버 저장에 성공한 뒤에만 새 카드 등장 및 기존 카드의 짧은 페이드·하강 애니메이션을 실행합니다. 저장 실패 시 편집 초안과 기존 순서를 보존하고 모션 줄이기 설정에서는 애니메이션을 생략합니다.
+
+열의 높이는 화면의 남은 높이에 맞추고 열 제목과 추가 버튼은 고정합니다. 카드가 많으면 열 안에서 세로 스크롤하며 목록 보기 역시 자체 영역에서 스크롤합니다. 모바일은 열을 가로로 넘길 수 있습니다. 완료 열은 연한 연두색, 우선 카드는 호박색 왼쪽 테두리와 깃발 배지로 구분하며 색상 외에도 ‘완료’·‘우선’ 텍스트를 유지합니다.

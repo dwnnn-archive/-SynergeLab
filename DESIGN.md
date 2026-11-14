@@ -2,27 +2,27 @@
 
 ## Direction
 
-A calm, compact workspace for a small Korean team. The supplied screenshot is the visual authority: blue utility rail, pale sidebar, three neutral columns, and one warm yellow in-progress column. No enterprise dashboard or decorative imagery. Member initials replace stock photographs intentionally.
+A calm, compact workspace for a small Korean team. The supplied screenshot is the visual authority: blue utility rail, pale sidebar, neutral to-do, warm yellow in-progress, and pale green completed columns. No enterprise dashboard or decorative imagery. Member initials replace stock photographs intentionally.
 
 ## Tokens
 
-Runtime source: src/styles.css :root. Brand #1451b8, ink #263448, muted #626f80, canvas #ffffff, sidebar #f5f6f8, column #f2f4f6, focus column #fff1ae. System sans-serif with Korean fallbacks; headings 26px, card titles 13–14px, body 11–12px, utility 9–12px. The wordmark uses the same system sans-serif, with a slightly tighter weight and tracking. Spacing 4/8/12/16/24/32. Card radius 6px; subtle border and shadow.
+Runtime source: src/styles.css :root. Brand #1451b8, ink #263448, muted #626f80, canvas #ffffff, sidebar #f5f6f8, column #f2f4f6, focus column #fff1ae, completed column #edf5e6. System sans-serif with Korean fallbacks; headings 26px, card titles 13–14px, body 11–12px, utility 9–12px. The wordmark uses the same system sans-serif, with a slightly tighter weight and tracking. Spacing 4/8/12/16/24/32. Card radius 6px; subtle border and shadow.
 
 ## Layout
 
-56px blue rail + 214px sidebar + fluid main. Content header, board/list tabs, search/filter toolbar, three equal-width columns. In-progress yellow is the sole visual signature. At 1100px sidebar narrows; below 800px it hides, main rail becomes a compact header, board scrolls horizontally with visible scrollbar. Forms use native modal dialog.
+58px blue rail + 220px sidebar + fluid main. The introductory heading and breadcrumb are removed. A single control row places board/list tabs and compact creation/options actions on the left; labels, member filters, and card search align to the far right in that order. Sharing remains in board options. Each of the three columns fills the remaining viewport height, with a fixed heading and add button around an independently scrolling card area. Save/connection status and completion progress sit in a compact bottom footer. Below 1150px the sidebar narrows; below 850px it hides. Below 600px the rail becomes a compact top bar, filters occupy a second row, and columns scroll horizontally while their cards retain vertical scrolling. Forms use native modal dialog.
 
 ## Behavior
 
-See UX-CONTRACT.md. All icons use Phosphor. No remote images/fonts needed. Focus, hover, active, reduced-motion and global scrollbars are owned by styles.css. Sample tasks clearly labeled. Cloudflare-backed shared boards. The existing UI is preserved; the header adds a share action and live/server-save status. Authenticated team members share a board link.
+See UX-CONTRACT.md. All icons use Phosphor. No remote images/fonts needed. Focus, hover, active, reduced-motion and global scrollbars are owned by styles.css. Cloudflare-backed shared boards use sample tasks only for initial creation. Board options own sharing; the footer owns live/server-save status. Authenticated team members share a board link.
 
 ## Compact cards
 
 Cards use a three-row grid: label/priority alongside ID/assignee, title, then a one-line description preview. Vertical padding is 8px at all viewport sizes. Full description remains in the editor and the preview tooltip. Long titles wrap naturally; there is no fixed height or text clipping on titles. Standard cards target roughly half the former height.
 
-## Compact heading and drop position
+## Card creation and drop position
 
-The breadcrumb bar is 36px high. Main top padding is 10–14px, heading bottom spacing is 8–10px, and board/list tabs are 30px high. These reduce the tall introductory region while preserving text sizes and the sidebar layout. Card density stays unchanged.
+New cards always go first in their selected column; the creation dialog has no position selector. The existing-card editor retains position selection for keyboard/touch reordering. After the server confirms insertion, the new card fades in over 220ms and existing cards move down with a brief opacity dip over 280ms. Motion uses measured card slots and is skipped for reduced-motion preferences, initial loading and filter changes. A locally created card scrolls its column to the top. Priority cards use a restrained amber left border and filled flag badge without increasing their compact height.
 
 During a card drag, a 3px green line (`--drop-marker: #279566`) with small round ends marks the insertion boundary. It is an absolute overlay in the existing card gap, so showing it never pushes cards around. It follows the pointer above/below each card midpoint and supports the beginning, middle, end and empty columns. The editor's native “카드 위치” select provides the same ordering without dragging.
 

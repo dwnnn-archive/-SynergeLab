@@ -1830,3 +1830,212 @@ fieldset {
   padding: 0;
   min-width: 0;
 }
+
+/* The workspace fits the viewport; each column owns its card scroll area. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.app {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+.workspace-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.workspace-main .content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px 24px 8px;
+}
+.board-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 18px;
+  min-height: 44px;
+  margin-bottom: 16px;
+}
+.board-controls .view-tabs {
+  height: 38px;
+  border: 0;
+  flex-shrink: 0;
+}
+.board-controls .view-tabs > div {
+  gap: 22px;
+}
+.board-controls .view-tabs [role="tab"] {
+  padding-bottom: 0;
+}
+.board-controls .heading-actions {
+  gap: 4px;
+  flex-direction: row-reverse;
+}
+.board-controls .primary {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 11px;
+}
+.toolbar-filters {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  min-width: 0;
+}
+.toolbar-filters .search-box {
+  width: clamp(140px, 16vw, 230px);
+}
+.toolbar-filters .member-filters {
+  margin-left: 0;
+  flex-shrink: 0;
+}
+.workspace-main .board {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+.workspace-main .column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.column-heading,
+.add-card {
+  flex-shrink: 0;
+}
+.cards {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  overflow-anchor: none;
+  padding: 6px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #b7c2b8 transparent;
+}
+.card-slot {
+  flex-shrink: 0;
+}
+.drop-tail {
+  position: relative;
+  flex-shrink: 0;
+  height: 0;
+  margin-top: -9px;
+}
+.drop-tail .drop-end {
+  top: 3px;
+  bottom: auto;
+}
+.drop-tail .drop-end.empty {
+  top: 0;
+}
+.column.done {
+  background: #edf5e6;
+}
+.done .count {
+  background: #dceacf;
+  color: #4f6543;
+}
+.card.is-priority {
+  border-left: 3px solid #d89b28;
+}
+.priority {
+  color: #80530d;
+  background: #fff0cd;
+  border: 1px solid #f0d79f;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 17px;
+}
+.workspace-main .board-footer {
+  flex-shrink: 0;
+  margin-top: 8px;
+  min-height: 20px;
+}
+.board-footer .total-progress {
+  padding: 0;
+}
+.workspace-main .list-view {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+@media (max-width: 1100px) {
+  .board-controls {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .toolbar-filters {
+    gap: 10px;
+  }
+}
+@media (max-width: 600px) {
+  .workspace-main .content {
+    padding: 10px 14px 6px;
+  }
+  .board-controls {
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+  .board-controls .heading-actions {
+    margin-left: auto;
+  }
+  .toolbar-filters {
+    flex-basis: 100%;
+    gap: 8px;
+  }
+  .toolbar-filters .search-box {
+    flex: 1;
+    width: auto;
+  }
+  .toolbar-filters .search-box input {
+    font-size: 11px;
+  }
+  .toolbar-filters .tag-filter {
+    margin: 0;
+    gap: 2px;
+  }
+  .toolbar-filters .tag-filter > svg {
+    display: none;
+  }
+  .toolbar-filters .member-filters .avatar {
+    width: 24px;
+    height: 24px;
+  }
+  .toolbar-filters .clear-filters {
+    padding: 2px;
+    font-size: 9px;
+  }
+  .workspace-main .board {
+    margin-right: -14px;
+    padding-right: 14px;
+    padding-bottom: 4px;
+  }
+  .workspace-main .board-footer {
+    margin-top: 4px;
+  }
+  .board-footer .save-status {
+    font-size: 9px;
+  }
+}
