@@ -8,6 +8,7 @@ async function ready(page, url = "/") {
 }
 async function create(page, title) {
   await page.getByRole("button", { name: "새 카드", exact: true }).click();
+  await expect(page.getByLabel("담당자", { exact: true })).toHaveValue("");
   await page.getByLabel("카드 제목", { exact: true }).fill(title);
   await page
     .getByRole("button", { name: "카드 추가", exact: true })
@@ -28,12 +29,24 @@ test("two independent browsers synchronize and a new browser retains saved cards
   await expect(
     teammate.getByRole("heading", { name: "실시간 공유 확인" }),
   ).toBeVisible();
+  const sharedCard = teammate
+    .locator(".card")
+    .filter({ hasText: "실시간 공유 확인" });
+  await expect(sharedCard.locator(".card-assignee")).toHaveText("담당자 없음");
+  await expect(sharedCard.locator(".avatar, .task-id")).toHaveCount(0);
   await teammate.getByRole("button", { name: "실시간 공유 확인 편집" }).click();
+  await teammate.getByLabel("담당자", { exact: true }).selectOption("daewon");
   await teammate.getByLabel("상태", { exact: true }).selectOption("done");
   await teammate.getByRole("button", { name: "변경 저장" }).click();
   await expect(
     page.locator(".done").getByText("실시간 공유 확인"),
   ).toBeVisible();
+  await expect(
+    page
+      .locator(".card")
+      .filter({ hasText: "실시간 공유 확인" })
+      .locator(".card-assignee"),
+  ).toHaveText("대원");
   await context.close();
   await page.close();
   const fresh = await browser.newContext();
@@ -42,6 +55,12 @@ test("two independent browsers synchronize and a new browser retains saved cards
   await expect(
     reopened.locator(".done").getByText("실시간 공유 확인"),
   ).toBeVisible();
+  await expect(
+    reopened
+      .locator(".card")
+      .filter({ hasText: "실시간 공유 확인" })
+      .locator(".card-assignee"),
+  ).toHaveText("대원");
   await fresh.close();
 });
 test("same-card edit conflict preserves draft while unrelated edits merge", async ({

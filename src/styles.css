@@ -1112,15 +1112,10 @@ h1 {
   justify-content: space-between;
   margin-top: 0;
 }
-.card-bottom .avatar.small {
-  width: 20px;
-  height: 20px;
-  font-size: 9px;
-}
-.task-id {
-  font-size: 9px;
+.card-assignee {
+  font-size: 11px;
   color: #61666c;
-  letter-spacing: 0.25px;
+  white-space: nowrap;
 }
 .done .card h3 {
   color: #616b76;

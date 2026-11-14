@@ -794,10 +794,10 @@ function App() {
                               <h3>{task.title}</h3>
                               <p title={task.description}>{task.description}</p>
                               <div className="card-bottom">
-                                <span className="task-id" title={task.id}>
-                                  {task.id.slice(0, 11)}
+                                <span className="card-assignee">
+                                  {MEMBERS.find((m) => m.id === task.member)
+                                    ?.name || "담당자 없음"}
                                 </span>
-                                <Avatar id={task.member} size="small" />
                               </div>
                             </button>
                           </article>
@@ -863,9 +863,9 @@ function App() {
                     ))}
                   </select>
                   <span className="list-member">
-                    <Avatar id={task.member} size="small" />
+                    {task.member && <Avatar id={task.member} size="small" />}
                     {MEMBERS.find((m) => m.id === task.member)?.name ||
-                      "미지정"}
+                      "담당자 없음"}
                   </span>
                 </div>
               ))}

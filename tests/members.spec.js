@@ -28,6 +28,12 @@ test("담당자는 봄·대원·세현만 표시하고 삭제된 담당자는 �
     ).toHaveCount(0);
     await expect(page.locator(`[title="${name}"]`)).toHaveCount(0);
   }
+  await expect(
+    page.locator('.card[data-task-id="SL-001"] .card-assignee'),
+  ).toHaveText("담당자 없음");
+  await expect(
+    page.locator('.card[data-task-id="SL-001"] .avatar'),
+  ).toHaveCount(0);
   await page.locator('.card[data-task-id="SL-001"] .card-open').click();
   const assignee = page.getByLabel("담당자", { exact: true });
   await expect(assignee).toHaveValue("");
@@ -40,12 +46,12 @@ test("담당자는 봄·대원·세현만 표시하고 삭제된 담당자는 �
   await assignee.selectOption("sehyeon");
   await page.getByRole("button", { name: "변경 저장" }).click();
   await expect(
-    page.locator('.card[data-task-id="SL-001"] [title="세현"]'),
-  ).toBeVisible();
+    page.locator('.card[data-task-id="SL-001"] .card-assignee'),
+  ).toHaveText("세현");
   await page.reload();
   await expect(
-    page.locator('.card[data-task-id="SL-001"] [title="세현"]'),
-  ).toBeVisible();
+    page.locator('.card[data-task-id="SL-001"] .card-assignee'),
+  ).toHaveText("세현");
   await expect(page.locator(".todo .column-english")).toHaveCSS(
     "font-size",
     "10.67px",

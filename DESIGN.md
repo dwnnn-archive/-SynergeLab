@@ -18,7 +18,7 @@ See UX-CONTRACT.md. All icons use Phosphor. No remote images/fonts needed. Focus
 
 ## Compact cards
 
-Cards use a three-row grid: label/priority alongside ID/assignee, title, then a one-line description preview. Vertical padding is 8px at all viewport sizes. Full description remains in the editor and the preview tooltip. Long titles wrap naturally; there is no fixed height or text clipping on titles. Standard cards target roughly half the former height.
+Cards use a three-row grid: label/priority alongside the assigned member’s full name, title, then a one-line description preview. Vertical padding is 8px at all viewport sizes. Full description remains in the editor and the preview tooltip. Long titles wrap naturally; there is no fixed height or text clipping on titles. Standard cards target roughly half the former height.
 
 ## Card creation and drop position
 
@@ -39,3 +39,7 @@ The uppercase column labels (TO DO / IN PROGRESS / DONE) use 10.67px type, incre
 ## Dialog scrolling
 
 Card, memo and other dialogs use the native browser scroll container with a flat translucent backdrop (#182b4660). Do not add backdrop-filter to this shared overlay: repeated local Chromium traces showed the full-viewport blur increased frame intervals during dialog scrolling. The static login preview retains its separate blur effect.
+
+## Assignee display
+
+The card top-right displays the currently assigned member’s full Korean name instead of the internal card ID and initial avatar. Unassigned cards show “담당자 없음” as plain text without an account-like avatar. This is the default empty selection in the editor, not an account. Internal IDs remain available for search, ordering and synchronization.
