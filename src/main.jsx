@@ -240,24 +240,11 @@ function App() {
     const changedStatus =
       draft.id &&
       base.tasks.find((t) => t.id === draft.id)?.status !== task.status;
-    if (
-      !draft.id ||
-      changedStatus ||
-      (draft.beforeId !== undefined && draft.beforeId !== "keep")
-    ) {
+    if (!draft.id || changedStatus) {
       const beforeId = !draft.id
         ? (orderedTasks(base.tasks).find((t) => t.status === task.status)?.id ??
           null)
-        : draft.beforeId && draft.beforeId !== "keep"
-          ? draft.beforeId
-          : null;
-      if (
-        beforeId &&
-        !tasks.some((t) => t.id === beforeId && t.status === task.status)
-      ) {
-        setError("선택한 카드 위치가 바뀌었습니다. 위치를 다시 선택해 주세요.");
-        return;
-      }
+        : null;
       tasks = placeTask(tasks, task.id, task.status, beforeId);
     }
     if (!draft.id) createdCard.current = task.id;
@@ -1065,7 +1052,6 @@ function App() {
                             setDraft({
                               ...draft,
                               status: e.target.value,
-                              beforeId: "",
                             })
                           }
                         >
@@ -1108,33 +1094,6 @@ function App() {
                         </select>
                       </label>
                     </div>
-                    {draft.id && (
-                      <label className="field">
-                        카드 위치
-                        <select
-                          aria-label="카드 위치"
-                          value={draft.beforeId ?? (draft.id ? "keep" : "")}
-                          onChange={(e) =>
-                            setDraft({ ...draft, beforeId: e.target.value })
-                          }
-                        >
-                          {draft.id && (
-                            <option value="keep">현재 위치 유지</option>
-                          )}
-                          {orderedTasks(board.tasks)
-                            .filter(
-                              (t) =>
-                                t.status === draft.status && t.id !== draft.id,
-                            )
-                            .map((t) => (
-                              <option key={t.id} value={t.id}>
-                                {t.title} 앞
-                              </option>
-                            ))}
-                          <option value="">맨 아래</option>
-                        </select>
-                      </label>
-                    )}
                     <label className="check-field">
                       <input
                         type="checkbox"

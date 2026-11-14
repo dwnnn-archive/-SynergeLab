@@ -22,9 +22,9 @@ Cards use a three-row grid: label/priority alongside ID/assignee, title, then a 
 
 ## Card creation and drop position
 
-New cards always go first in their selected column; the creation dialog has no position selector. The existing-card editor retains position selection for keyboard/touch reordering. After the server confirms insertion, the new card fades in over 220ms and existing cards move down with a brief opacity dip over 280ms. Motion uses measured card slots and is skipped for reduced-motion preferences, initial loading and filter changes. A locally created card scrolls its column to the top. Priority cards use a restrained amber left border and filled flag badge without increasing their compact height.
+New cards always go first in their selected column; the creation dialog has no position selector. The existing-card editor also omits position selection. Content edits retain the existing order; status changes append to the destination column. Reordering within a column uses board drag and drop. After the server confirms insertion, the new card fades in over 220ms and existing cards move down with a brief opacity dip over 280ms. Motion uses measured card slots and is skipped for reduced-motion preferences, initial loading and filter changes. A locally created card scrolls its column to the top. Priority cards use a restrained amber left border and filled flag badge without increasing their compact height.
 
-During a card drag, a 3px green line (`--drop-marker: #279566`) with small round ends marks the insertion boundary. It is an absolute overlay in the existing card gap, so showing it never pushes cards around. It follows the pointer above/below each card midpoint and supports the beginning, middle, end and empty columns. The editor's native “카드 위치” select provides the same ordering without dragging.
+During a card drag, a 3px green line (`--drop-marker: #279566`) with small round ends marks the insertion boundary. It is an absolute overlay in the existing card gap, so showing it never pushes cards around. It follows the pointer above/below each card midpoint and supports the beginning, middle, end and empty columns. The editor provides status changes but no position selector.
 
 ## Password entry and profile
 

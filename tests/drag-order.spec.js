@@ -118,18 +118,19 @@ test("드래그 취소와 저장 실패 시 순서를 바꾸지 않고 표시선
   await expectOrder(page, "todo", ["SL-001", "SL-002", "SL-003", "SL-004"]);
 });
 
-test("모바일에서도 카드 편집의 위치 선택으로 순서를 저장한다", async ({
+test("모바일 카드 편집에는 위치 선택이 없고 내용 수정은 기존 순서를 유지한다", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await ready(page);
   await card(page, "SL-004").getByRole("button").click();
-  await page.getByLabel("카드 위치", { exact: true }).selectOption("SL-001");
+  await expect(page.getByLabel("카드 위치", { exact: true })).toHaveCount(0);
+  await page.getByLabel("카드 제목", { exact: true }).fill("팀 미팅 준비 수정");
   await page.getByRole("button", { name: "변경 저장" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expectOrder(page, "todo", ["SL-004", "SL-001", "SL-002", "SL-003"]);
+  await expectOrder(page, "todo", ["SL-001", "SL-002", "SL-003", "SL-004"]);
   await page.reload();
-  await expectOrder(page, "todo", ["SL-004", "SL-001", "SL-002", "SL-003"]);
+  await expectOrder(page, "todo", ["SL-001", "SL-002", "SL-003", "SL-004"]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     390,
   );

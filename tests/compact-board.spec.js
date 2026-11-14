@@ -55,7 +55,7 @@ test("탭과 필터가 같은 줄에 있고 새 카드는 맨 위에 등장해 �
     "맨 위에 새 카드",
   );
   await page.getByRole("button", { name: "맨 위에 새 카드 편집" }).click();
-  await expect(page.getByLabel("카드 위치", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("카드 위치", { exact: true })).toHaveCount(0);
 });
 
 test("많은 카드는 열 안에서만 스크롤되고 헤더와 추가 버튼은 고정된다", async ({
