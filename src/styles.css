@@ -1273,9 +1273,9 @@ h1 {
   box-shadow: 0 20px 100px #10234530;
   color: var(--ink);
 }
+/* A flat scrim avoids full-viewport blur compositing during dialog scrolling. */
 .modal::backdrop {
   background: #182b4660;
-  backdrop-filter: blur(3px);
 }
 .modal-inner {
   padding: 28px;

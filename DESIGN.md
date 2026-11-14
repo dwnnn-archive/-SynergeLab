@@ -35,3 +35,7 @@ The large rail avatar belongs to the signed-in account. It shows a circular uplo
 ## Column labels and current members
 
 The uppercase column labels (TO DO / IN PROGRESS / DONE) use 10.67px type, increased by approximately 2pt from 8px. Column actions and compact card sizes stay unchanged. Member controls list 봄, 대원 and 세현; retired member names are not rendered. 세현 has no password and cannot sign in yet.
+
+## Dialog scrolling
+
+Card, memo and other dialogs use the native browser scroll container with a flat translucent backdrop (#182b4660). Do not add backdrop-filter to this shared overlay: repeated local Chromium traces showed the full-viewport blur increased frame intervals during dialog scrolling. The static login preview retains its separate blur effect.
